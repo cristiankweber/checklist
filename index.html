@@ -1,328 +1,480 @@
- (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/index.html b/index.html
-index 54ad707af4342bc13e2f553cf1c3c0dfd089dc1e..bb51b6012146f226156ec2330ff06944be81f43b 100644
---- a/index.html
-+++ b/index.html
-@@ -145,213 +145,196 @@
-       </div>
- 
-       <button type="submit">Gerar PDF Tabelado</button>
-     </form>
-   </div>
- 
-   <script>
-     // cálculo automático da SC
-     function calcularSC() {
-       const peso = parseFloat(document.getElementById('Peso_kg').value);
-       const altura = parseFloat(document.getElementById('Altura_cm').value);
-       if (!isNaN(peso) && !isNaN(altura)) {
-         const sc = 0.007184 * Math.pow(peso, 0.425) * Math.pow(altura, 0.725);
-         document.getElementById('SC_m2').value = sc.toFixed(2);
-       } else {
-         document.getElementById('SC_m2').value = '';
-       }
-     }
-     document.getElementById('Peso_kg').addEventListener('input', calcularSC);
-     document.getElementById('Altura_cm').addEventListener('input', calcularSC);
- 
-     document.getElementById('formQuimio').addEventListener('submit', function(event) {
-       event.preventDefault();
-       const form = event.target;
- 
--      // coletar dados do formulário
--      const data = {
--        Paciente_ID: form.Paciente_ID.value,
--        Nome_Completo: form.Nome_Completo.value,
--        Sexo: form.Sexo.value,
--        Peso_kg: form.Peso_kg.value,
--        Altura_cm: form.Altura_cm.value,
--        SC_m2: form.SC_m2.value,
--        LDH_valor: form.LDH_valor.value,
--        Albumina_valor: form.Albumina_valor.value,
--        ECG_frequencia: form.ECG_frequencia.value,
--        ECG_QTc: form.ECG_QTc.value,
--        ECO_FE: form.ECO_FE.value,
--        ECO_sistolica: form.ECO_sistolica.value,
--        ECO_diastolica: form.ECO_diastolica.value,
--        Observacoes: form.Observacoes.value
--      };
-+      // coletar dados do formulário de forma genérica
-+      const formData = new FormData(form);
-+      const data = Object.fromEntries(formData.entries());
-+
-+      // determinar ritmo selecionado
-+      const ritmoSelecionado = form.querySelector('input[name="ECG_ritmo"]:checked');
-+      data.ECG_ritmo = ritmoSelecionado
-+        ? (ritmoSelecionado.value === "Outro"
-+            ? (form.ECG_ritmo_outro.value.trim() || "Outro")
-+            : ritmoSelecionado.value)
-+        : "";
- 
--      // determinar ritmo
--      let ritmo = "";
--      const ritmoRadios = form.elements["ECG_ritmo"];
--      if (ritmoRadios) {
--        for (const r of ritmoRadios) {
--          if (r.checked) {
--            if (r.value === "Outro") {
--              ritmo = form.ECG_ritmo_outro.value || "Outro";
--            } else {
--              ritmo = r.value;
--            }
-+      // garante que campos numéricos sejam apresentados de forma amigável
-+      ["Peso_kg", "Altura_cm", "SC_m2", "ECG_frequencia"].forEach((campo) => {
-+        if (data[campo]) {
-+          const numero = Number(data[campo].replace(',', '.'));
-+          if (!Number.isNaN(numero)) {
-+            data[campo] = numero.toString().replace('.', ',');
-           }
-         }
--      }
--      data.ECG_ritmo = ritmo;
-+      });
- 
-       // gerar PDF com layout tabelado
-       const { jsPDF } = window.jspdf;
-       const doc = new jsPDF({ unit: 'pt', format: 'a4' });
- 
-       const margin = 40;
-       const pageWidth = doc.internal.pageSize.width;
-+      const pageHeight = doc.internal.pageSize.height;
-       const usableWidth = pageWidth - margin * 2;
-+      let y = margin;
- 
-       // inserir logo no topo
-       const logoUrl = "https://vidahematologia.com.br/wp-content/uploads/2025/02/vida-hematologia-logo.png";
-       const logoWidth = 120;
-       const logoHeight = 60;
- 
-       // função auxiliar para carregar a imagem
-       function loadImage(url) {
-         return new Promise((resolve, reject) => {
-           const img = new Image();
-           img.crossOrigin = "Anonymous";
-           img.src = url;
-           img.onload = () => resolve(img);
-           img.onerror = reject;
-         });
-       }
- 
-+      const filtrarCampos = (entradas) =>
-+        entradas.filter(([, valor]) => valor && valor.toString().trim() !== "");
-+
-+      const adicionarOuMensagem = (config) => {
-+        doc.setFont(undefined, 'bold');
-+        doc.text(config.titulo, margin, y);
-+        y += 18;
-+        doc.setFont(undefined, 'normal');
-+
-+        if (config.linhas.length > 0) {
-+          doc.autoTable({
-+            startY: y,
-+            margin: { left: margin, right: margin },
-+            tableWidth: usableWidth,
-+            theme: 'grid',
-+            styles: { fontSize: 10, cellPadding: 4 },
-+            head: [config.cabecalho],
-+            body: config.linhas
-+          });
-+          y = doc.lastAutoTable.finalY + 20;
-+        } else {
-+          doc.text("Sem dados informados.", margin, y);
-+          y += 20;
-+        }
-+      };
-+
-       (async () => {
-         try {
-           const img = await loadImage(logoUrl);
-           doc.addImage(img, 'PNG', margin, margin, logoWidth, logoHeight);
-         } catch (err) {
-           // falhou carregar logo, ignora
-         }
- 
--        let y = margin + logoHeight + 20;
-+        y = margin + logoHeight + 20;
- 
-         doc.setFontSize(16);
-         doc.text("Ficha de Avaliação Pré‑Quimioterapia", margin, y);
-         y += 25;
- 
-         doc.setFontSize(12);
- 
--        // seção “Identificação / Dados Demográficos”
--        doc.setFont(undefined, 'bold');
--        doc.text("Identificação e Dados Demográficos", margin, y);
--        y += 18;
--        doc.setFont(undefined, 'normal');
--
--        const section1 = [
--          ["Paciente_ID", data.Paciente_ID],
--          ["Nome Completo", data.Nome_Completo],
--          ["Sexo", data.Sexo],
--          ["Peso (kg)", data.Peso_kg],
--          ["Altura (cm)", data.Altura_cm],
--          ["SC (m²)", data.SC_m2]
--        ];
--        doc.autoTable({
--          startY: y,
--          margin: { left: margin, right: margin },
--          tableWidth: usableWidth,
--          theme: 'grid',
--          styles: { fontSize: 10, cellPadding: 4 },
--          head: [['Campo', 'Valor']],
--          body: section1,
--          didDrawPage: (dataArg) => { /* nada */ }
--        });
--        y = doc.lastAutoTable.finalY + 20;
--
--        // seção “Exames Bioquímicos / Laboratoriais”
--        doc.setFont(undefined, 'bold');
--        doc.text("Exames Laboratoriais", margin, y);
--        y += 18;
--        doc.setFont(undefined, 'normal');
--
--        const sectionExames = [
--          ["LDH", data.LDH_valor],
--          ["Albumina", data.Albumina_valor]
--          // adicione mais pares [campo, valor] conforme os campos que você incluiu
--        ];
--        doc.autoTable({
--          startY: y,
--          margin: { left: margin, right: margin },
--          tableWidth: usableWidth,
--          theme: 'grid',
--          styles: { fontSize: 10, cellPadding: 4 },
--          head: [['Exame', 'Valor']],
--          body: sectionExames
--        });
--        y = doc.lastAutoTable.finalY + 20;
--
--        // seção ECG
--        doc.setFont(undefined, 'bold');
--        doc.text("ECG", margin, y);
--        y += 18;
--        doc.setFont(undefined, 'normal');
--
--        const sectionECG = [
--          ["Frequência (bpm)", data.ECG_frequencia],
--          ["Ritmo", data.ECG_ritmo],
--          ["QTc (ms)", data.ECG_QTc]
-+        const secoes = [
-+          {
-+            titulo: "Identificação e Dados Demográficos",
-+            cabecalho: ['Campo', 'Valor'],
-+            linhas: filtrarCampos([
-+              ["Paciente_ID", data.Paciente_ID],
-+              ["Nome Completo", data.Nome_Completo],
-+              ["Sexo", data.Sexo],
-+              ["Peso (kg)", data.Peso_kg],
-+              ["Altura (cm)", data.Altura_cm],
-+              ["SC (m²)", data.SC_m2]
-+            ])
-+          },
-+          {
-+            titulo: "Exames Laboratoriais",
-+            cabecalho: ['Exame', 'Valor'],
-+            linhas: filtrarCampos([
-+              ["LDH", data.LDH_valor],
-+              ["Albumina", data.Albumina_valor]
-+            ])
-+          },
-+          {
-+            titulo: "ECG",
-+            cabecalho: ['Parâmetro', 'Valor'],
-+            linhas: filtrarCampos([
-+              ["Frequência (bpm)", data.ECG_frequencia],
-+              ["Ritmo", data.ECG_ritmo],
-+              ["QTc (ms)", data.ECG_QTc]
-+            ])
-+          },
-+          {
-+            titulo: "ECOcardiograma",
-+            cabecalho: ['Parâmetro', 'Valor'],
-+            linhas: filtrarCampos([
-+              ["Fração de Ejeção (%)", data.ECO_FE],
-+              ["Função Sistólica", data.ECO_sistolica],
-+              ["Função Diastólica", data.ECO_diastolica]
-+            ])
-+          }
-         ];
--        doc.autoTable({
--          startY: y,
--          margin: { left: margin, right: margin },
--          tableWidth: usableWidth,
--          theme: 'grid',
--          styles: { fontSize: 10, cellPadding: 4 },
--          head: [['Parâmetro', 'Valor']],
--          body: sectionECG
--        });
--        y = doc.lastAutoTable.finalY + 20;
- 
--        // seção ECOcardiograma
--        doc.setFont(undefined, 'bold');
--        doc.text("ECOcardiograma", margin, y);
--        y += 18;
--        doc.setFont(undefined, 'normal');
-+        for (const secao of secoes) {
-+          if (y + 40 > pageHeight - margin) {
-+            doc.addPage();
-+            y = margin;
-+          }
-+          adicionarOuMensagem(secao);
-+        }
- 
--        const sectionECO = [
--          ["Fração de Ejeção (%)", data.ECO_FE],
--          ["Função Sistólica", data.ECO_sistolica],
--          ["Função Diastólica", data.ECO_diastolica]
--        ];
--        doc.autoTable({
--          startY: y,
--          margin: { left: margin, right: margin },
--          tableWidth: usableWidth,
--          theme: 'grid',
--          styles: { fontSize: 10, cellPadding: 4 },
--          head: [['Parâmetro', 'Valor']],
--          body: sectionECO
--        });
--        y = doc.lastAutoTable.finalY + 20;
-+        if (y + 60 > pageHeight - margin) {
-+          doc.addPage();
-+          y = margin;
-+        }
- 
-         // seção Observações / assinatura
-         doc.setFont(undefined, 'bold');
-         doc.text("Observações", margin, y);
-         y += 18;
-         doc.setFont(undefined, 'normal');
--        const obsLines = doc.splitTextToSize(data.Observacoes || "", usableWidth);
--        doc.text(obsLines, margin, y);
--        y += obsLines.length * 14 + 20;
-+        const obs = data.Observacoes ? data.Observacoes.trim() : "";
-+        if (obs) {
-+          const obsLines = doc.splitTextToSize(obs, usableWidth);
-+          doc.text(obsLines, margin, y);
-+          y += obsLines.length * 14 + 20;
-+        } else {
-+          doc.text("Sem observações adicionais.", margin, y);
-+          y += 20;
-+        }
- 
-         // rodapé
-         doc.setFontSize(10);
-         const hoje = new Date();
--        doc.text(`Gerado em: ${hoje.toLocaleString()}`, margin, doc.internal.pageSize.height - margin);
--        // futuras linhas: médico, CRM etc. (você pode adicionar)
-+        doc.text(`Gerado em: ${hoje.toLocaleString()}`, margin, pageHeight - margin);
- 
-         // salvar PDF
-         doc.save("Ficha_Avaliacao_Quimioterapia_Tabelada.pdf");
-       })();
-     });
-   </script>
- </body>
- </html> 
-EOF
-)
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Avaliação Pré‑Quimioterapia – PDF Tabelado</title>
+  <!-- jsPDF e AutoTable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #fff;
+    }
+    .container {
+      max-width: 740px;
+      margin: auto;
+    }
+    form .campo {
+      margin-bottom: 12px;
+    }
+    form .campo label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    form .campo input,
+    form .campo select,
+    form .campo textarea {
+      width: 100%;
+      padding: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    form .campo textarea {
+      resize: vertical;
+      min-height: 40px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 24px;
+      background: #007bff;
+      color: #fff;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Formulário de Avaliação Pré‑Quimioterapia</h2>
+    <form id="formQuimio">
+      <!-- Exemplo reduzido de campos; ideal você incluir todos -->
+      <div class="campo">
+        <label for="Paciente_ID">Paciente_ID</label>
+        <input type="text" id="Paciente_ID" name="Paciente_ID" required>
+      </div>
+      <div class="campo">
+        <label for="Nome_Completo">Nome Completo</label>
+        <input type="text" id="Nome_Completo" name="Nome_Completo">
+      </div>
+      <div class="campo">
+        <label for="Sexo">Sexo (M/F)</label>
+        <select id="Sexo" name="Sexo">
+          <option value="">Selecione</option>
+          <option value="M">M</option>
+          <option value="F">F</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="Peso_kg">Peso (kg)</label>
+        <input type="number" id="Peso_kg" name="Peso_kg" step="0.1">
+      </div>
+      <div class="campo">
+        <label for="Altura_cm">Altura (cm)</label>
+        <input type="number" id="Altura_cm" name="Altura_cm" step="0.1">
+      </div>
+      <div class="campo">
+        <label for="SC_m2">SC (m²)</label>
+        <input type="number" id="SC_m2" name="SC_m2" step="0.01" readonly>
+      </div>
+
+      <h3>Ficha de Avaliação Pré‑Quimioterapia</h3>
+      <div class="campo">
+        <label for="Mulher_em_idade_fertil">Mulher em idade fértil?</label>
+        <select id="Mulher_em_idade_fertil" name="Mulher_em_idade_fertil">
+          <option value="">Selecione</option>
+          <option value="Sim">Sim</option>
+          <option value="Não">Não</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="beta_hCG_valor">beta‑hCG Valor</label>
+        <input type="text" id="beta_hCG_valor" name="beta_hCG_valor">
+      </div>
+      <div class="campo">
+        <label for="beta_hCG_data">beta‑hCG Data</label>
+        <input type="date" id="beta_hCG_data" name="beta_hCG_data">
+      </div>
+      <div class="campo">
+        <label for="Creatinina_valor">Creatinina Valor</label>
+        <input type="text" id="Creatinina_valor" name="Creatinina_valor">
+      </div>
+      <div class="campo">
+        <label for="Ureia_valor">Ureia Valor</label>
+        <input type="text" id="Ureia_valor" name="Ureia_valor">
+      </div>
+      <div class="campo">
+        <label for="Sodio_valor">Sódio Valor</label>
+        <input type="text" id="Sodio_valor" name="Sodio_valor">
+      </div>
+      <div class="campo">
+        <label for="Potassio_valor">Potássio Valor</label>
+        <input type="text" id="Potassio_valor" name="Potassio_valor">
+      </div>
+      <div class="campo">
+        <label for="Magnesio_valor">Magnésio Valor</label>
+        <input type="text" id="Magnesio_valor" name="Magnesio_valor">
+      </div>
+      <div class="campo">
+        <label for="Fosforo_valor">Fósforo Valor</label>
+        <input type="text" id="Fosforo_valor" name="Fosforo_valor">
+      </div>
+      <div class="campo">
+        <label for="Calcio_ionico_valor">Cálcio iônico Valor</label>
+        <input type="text" id="Calcio_ionico_valor" name="Calcio_ionico_valor">
+      </div>
+      <div class="campo">
+        <label for="Acido_Urico_valor">Ácido Úrico Valor</label>
+        <input type="text" id="Acido_Urico_valor" name="Acido_Urico_valor">
+      </div>
+      <div class="campo">
+        <label for="LDH_valor">LDH Valor</label>
+        <input type="text" id="LDH_valor" name="LDH_valor">
+      </div>
+      <div class="campo">
+        <label for="Albumina_valor">Albumina Valor</label>
+        <input type="text" id="Albumina_valor" name="Albumina_valor">
+      </div>
+      <div class="campo">
+        <label for="TGO_valor">TGO (AST) Valor</label>
+        <input type="text" id="TGO_valor" name="TGO_valor">
+      </div>
+      <div class="campo">
+        <label for="TGP_valor">TGP (ALT) Valor</label>
+        <input type="text" id="TGP_valor" name="TGP_valor">
+      </div>
+      <div class="campo">
+        <label for="Bilirrubina_total_valor">Bilirrubina Total Valor</label>
+        <input type="text" id="Bilirrubina_total_valor" name="Bilirrubina_total_valor">
+      </div>
+      <div class="campo">
+        <label for="Bilirrubina_direta_valor">Bilirrubina Direta Valor</label>
+        <input type="text" id="Bilirrubina_direta_valor" name="Bilirrubina_direta_valor">
+      </div>
+      <div class="campo">
+        <label for="Bilirrubina_indireta_valor">Bilirrubina Indireta Valor</label>
+        <input type="text" id="Bilirrubina_indireta_valor" name="Bilirrubina_indireta_valor">
+      </div>
+      <div class="campo">
+        <label for="Hemograma">Hemograma</label>
+        <textarea id="Hemograma" name="Hemograma"></textarea>
+      </div>
+      <div class="campo">
+        <label for="TP_valor">TP Valor</label>
+        <input type="text" id="TP_valor" name="TP_valor">
+      </div>
+      <div class="campo">
+        <label for="KTTP_valor">kTTP Valor</label>
+        <input type="text" id="KTTP_valor" name="KTTP_valor">
+      </div>
+      <div class="campo">
+        <label for="Fibrinogenio_valor">Fibrinogênio Valor</label>
+        <input type="text" id="Fibrinogenio_valor" name="Fibrinogenio_valor">
+      </div>
+      <div class="campo">
+        <label for="HIV_resultado">HIV Resultado</label>
+        <input type="text" id="HIV_resultado" name="HIV_resultado">
+      </div>
+      <div class="campo">
+        <label for="HCV_resultado">HCV Resultado</label>
+        <input type="text" id="HCV_resultado" name="HCV_resultado">
+      </div>
+      <div class="campo">
+        <label for="HBsAg_resultado">HBsAg Resultado</label>
+        <input type="text" id="HBsAg_resultado" name="HBsAg_resultado">
+      </div>
+      <div class="campo">
+        <label for="antiHBc_total_resultado">antiHBc total Resultado</label>
+        <input type="text" id="antiHBc_total_resultado" name="antiHBc_total_resultado">
+      </div>
+      <div class="campo">
+        <label for="VDRL_resultado">VDRL Resultado</label>
+        <input type="text" id="VDRL_resultado" name="VDRL_resultado">
+      </div>
+      <div class="campo">
+        <label for="HTLV_I_II_resultado">HTLV I/II Resultado</label>
+        <input type="text" id="HTLV_I_II_resultado" name="HTLV_I_II_resultado">
+      </div>
+
+      <h3>ECG</h3>
+      <div class="campo">
+        <label for="ECG_frequencia">Frequência cardíaca (bpm)</label>
+        <input type="number" id="ECG_frequencia" name="ECG_frequencia">
+      </div>
+      <div class="campo">
+        <label>Ritmo</label>
+        <div>
+          <label><input type="radio" name="ECG_ritmo" value="Sinusal"> Sinusal</label>
+          <label><input type="radio" name="ECG_ritmo" value="Outro"> Outro:</label>
+          <input type="text" id="ECG_ritmo_outro" name="ECG_ritmo_outro" placeholder="Descreva se outro">
+        </div>
+      </div>
+      <div class="campo">
+        <label for="ECG_QTc">Intervalo QTc (ms)</label>
+        <input type="text" id="ECG_QTc" name="ECG_QTc">
+      </div>
+
+      <h3>ECOcardiograma</h3>
+      <div class="campo">
+        <label for="ECO_FE">Fração de ejeção (FE) (%)</label>
+        <input type="text" id="ECO_FE" name="ECO_FE">
+      </div>
+      <div class="campo">
+        <label>Função sistólica</label>
+        <select id="ECO_sistolica" name="ECO_sistolica">
+          <option value="">Selecione</option>
+          <option value="Normal">Normal</option>
+          <option value="Alterada">Alterada</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label>Função diastólica</label>
+        <select id="ECO_diastolica" name="ECO_diastolica">
+          <option value="">Selecione</option>
+          <option value="Normal">Normal</option>
+          <option value="Alterada">Alterada</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="Observacoes">Observações</label>
+        <textarea id="Observacoes" name="Observacoes"></textarea>
+      </div>
+
+      <button type="submit">Gerar PDF Tabelado</button>
+    </form>
+  </div>
+
+  <script>
+    // cálculo automático da SC
+    function calcularSC() {
+      const peso = parseFloat(document.getElementById('Peso_kg').value);
+      const altura = parseFloat(document.getElementById('Altura_cm').value);
+      if (!isNaN(peso) && !isNaN(altura)) {
+        const sc = 0.007184 * Math.pow(peso, 0.425) * Math.pow(altura, 0.725);
+        document.getElementById('SC_m2').value = sc.toFixed(2);
+      } else {
+        document.getElementById('SC_m2').value = '';
+      }
+    }
+    document.getElementById('Peso_kg').addEventListener('input', calcularSC);
+    document.getElementById('Altura_cm').addEventListener('input', calcularSC);
+
+    document.getElementById('formQuimio').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const form = event.target;
+
+      // coletar dados do formulário de forma genérica
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+
+      // determinar ritmo selecionado
+      const ritmoSelecionado = form.querySelector('input[name="ECG_ritmo"]:checked');
+      data.ECG_ritmo = ritmoSelecionado
+        ? (ritmoSelecionado.value === "Outro"
+            ? (form.ECG_ritmo_outro.value.trim() || "Outro")
+            : ritmoSelecionado.value)
+        : "";
+
+      // garante que campos numéricos sejam apresentados de forma amigável
+      ["Peso_kg", "Altura_cm", "SC_m2", "ECG_frequencia"].forEach((campo) => {
+        if (data[campo]) {
+          const numero = Number(data[campo].replace(',', '.'));
+          if (!Number.isNaN(numero)) {
+            data[campo] = numero.toString().replace('.', ',');
+          }
+        }
+      });
+
+      // gerar PDF com layout tabelado
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+
+      const margin = 40;
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
+      const usableWidth = pageWidth - margin * 2;
+      let y = margin;
+
+      // inserir logo no topo
+      const logoUrl = "https://vidahematologia.com.br/wp-content/uploads/2025/02/vida-hematologia-logo.png";
+      const logoWidth = 120;
+      const logoHeight = 60;
+
+      // função auxiliar para carregar a imagem
+      function loadImage(url) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = "Anonymous";
+          img.src = url;
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+        });
+      }
+
+      const filtrarCampos = (entradas) =>
+        entradas.filter(([, valor]) => valor && valor.toString().trim() !== "");
+
+      const adicionarOuMensagem = (config) => {
+        doc.setFont(undefined, 'bold');
+        doc.text(config.titulo, margin, y);
+        y += 18;
+        doc.setFont(undefined, 'normal');
+
+        if (config.linhas.length > 0) {
+          doc.autoTable({
+            startY: y,
+            margin: { left: margin, right: margin },
+            tableWidth: usableWidth,
+            theme: 'grid',
+            styles: { fontSize: 10, cellPadding: 4 },
+            head: [config.cabecalho],
+            body: config.linhas
+          });
+          y = doc.lastAutoTable.finalY + 20;
+        } else {
+          doc.text("Sem dados informados.", margin, y);
+          y += 20;
+        }
+      };
+
+      (async () => {
+        try {
+          const img = await loadImage(logoUrl);
+          doc.addImage(img, 'PNG', margin, margin, logoWidth, logoHeight);
+        } catch (err) {
+          // falhou carregar logo, ignora
+        }
+
+        y = margin + logoHeight + 20;
+
+        doc.setFontSize(16);
+        doc.text("Ficha de Avaliação Pré‑Quimioterapia", margin, y);
+        y += 25;
+
+        doc.setFontSize(12);
+
+        const secoes = [
+          {
+            titulo: "Identificação e Dados Demográficos",
+            cabecalho: ['Campo', 'Valor'],
+            linhas: filtrarCampos([
+              ["Paciente_ID", data.Paciente_ID],
+              ["Nome Completo", data.Nome_Completo],
+              ["Sexo", data.Sexo],
+              ["Peso (kg)", data.Peso_kg],
+              ["Altura (cm)", data.Altura_cm],
+              ["SC (m²)", data.SC_m2]
+            ])
+          },
+          {
+            titulo: "Ficha de Avaliação Pré‑Quimioterapia",
+            cabecalho: ['Campo', 'Valor'],
+            linhas: filtrarCampos([
+              ["Mulher em idade fértil?", data.Mulher_em_idade_fertil],
+              ["beta‑hCG Valor", data.beta_hCG_valor],
+              ["beta‑hCG Data", data.beta_hCG_data]
+            ])
+          },
+          {
+            titulo: "Exames Laboratoriais e Sorologias",
+            cabecalho: ['Exame', 'Valor'],
+            linhas: filtrarCampos([
+              ["Creatinina", data.Creatinina_valor],
+              ["Ureia", data.Ureia_valor],
+              ["Sódio", data.Sodio_valor],
+              ["Potássio", data.Potassio_valor],
+              ["Magnésio", data.Magnesio_valor],
+              ["Fósforo", data.Fosforo_valor],
+              ["Cálcio iônico", data.Calcio_ionico_valor],
+              ["Ácido Úrico", data.Acido_Urico_valor],
+              ["LDH", data.LDH_valor],
+              ["Albumina", data.Albumina_valor],
+              ["TGO (AST)", data.TGO_valor],
+              ["TGP (ALT)", data.TGP_valor],
+              ["Bilirrubina Total", data.Bilirrubina_total_valor],
+              ["Bilirrubina Direta", data.Bilirrubina_direta_valor],
+              ["Bilirrubina Indireta", data.Bilirrubina_indireta_valor],
+              ["Hemograma", data.Hemograma],
+              ["TP", data.TP_valor],
+              ["kTTP", data.KTTP_valor],
+              ["Fibrinogênio", data.Fibrinogenio_valor],
+              ["HIV", data.HIV_resultado],
+              ["HCV", data.HCV_resultado],
+              ["HBsAg", data.HBsAg_resultado],
+              ["antiHBc total", data.antiHBc_total_resultado],
+              ["VDRL", data.VDRL_resultado],
+              ["HTLV I/II", data.HTLV_I_II_resultado]
+            ])
+          },
+          {
+            titulo: "ECG",
+            cabecalho: ['Parâmetro', 'Valor'],
+            linhas: filtrarCampos([
+              ["Frequência (bpm)", data.ECG_frequencia],
+              ["Ritmo", data.ECG_ritmo],
+              ["QTc (ms)", data.ECG_QTc]
+            ])
+          },
+          {
+            titulo: "ECOcardiograma",
+            cabecalho: ['Parâmetro', 'Valor'],
+            linhas: filtrarCampos([
+              ["Fração de Ejeção (%)", data.ECO_FE],
+              ["Função Sistólica", data.ECO_sistolica],
+              ["Função Diastólica", data.ECO_diastolica]
+            ])
+          }
+        ];
+
+        for (const secao of secoes) {
+          if (y + 40 > pageHeight - margin) {
+            doc.addPage();
+            y = margin;
+          }
+          adicionarOuMensagem(secao);
+        }
+
+        if (y + 60 > pageHeight - margin) {
+          doc.addPage();
+          y = margin;
+        }
+
+        // seção Observações / assinatura
+        doc.setFont(undefined, 'bold');
+        doc.text("Observações", margin, y);
+        y += 18;
+        doc.setFont(undefined, 'normal');
+        const obs = data.Observacoes ? data.Observacoes.trim() : "";
+        if (obs) {
+          const obsLines = doc.splitTextToSize(obs, usableWidth);
+          doc.text(obsLines, margin, y);
+          y += obsLines.length * 14 + 20;
+        } else {
+          doc.text("Sem observações adicionais.", margin, y);
+          y += 20;
+        }
+
+        // rodapé
+        doc.setFontSize(10);
+        const hoje = new Date();
+        doc.text(`Gerado em: ${hoje.toLocaleString()}`, margin, pageHeight - margin);
+
+        // salvar PDF
+        doc.save("Ficha_Avaliacao_Quimioterapia_Tabelada.pdf");
+      })();
+    });
+  </script>
+</body>
+</html>
