@@ -237,7 +237,7 @@
         <input type="text" id="Fibrinogenio_valor" name="Fibrinogenio_valor">
       </div>
 
-      <!-- Seções ECG e ECOcardio -->
+      <!-- Seções ECG e ECO -->
       <h3>ECG</h3>
       <div class="campo">
         <label for="ECG_frequencia">Frequência cardíaca (bpm)</label>
@@ -312,7 +312,6 @@
 
     <div class="ficha" id="fichaImpressao">
       <h3>Ficha de Avaliação Pré‑Quimioterapia</h3>
-      <!-- Linha por linha -->
       <div class="linha"><span class="titulo">Paciente_ID:</span> <span id="f_Paciente_ID"></span></div>
       <div class="linha"><span class="titulo">Nome Completo:</span> <span id="f_Nome_Completo"></span></div>
       <div class="linha"><span class="titulo">Sexo:</span> <span id="f_Sexo"></span></div>
@@ -324,7 +323,7 @@
       <div class="linha"><span class="titulo">ECOG:</span> <span id="f_ECOG"></span></div>
       <div class="linha"><span class="titulo">Mulher em idade fértil?</span> <span id="f_Mulher_em_idade_fertil"></span></div>
       <div class="linha"><span class="titulo">Data da Avaliação / Exames:</span> <span id="f_Data_Avaliacao"></span></div>
-      
+
       <h4>Exames Laboratoriais</h4>
       <div class="linha"><span class="titulo">beta‑hCG Valor:</span> <span id="f_beta_hCG_valor"></span></div>
       <div class="linha"><span class="titulo">Creatinina:</span> <span id="f_Creatinina_valor"></span></div>
@@ -340,7 +339,7 @@
       <div class="linha"><span class="titulo">TGO (AST):</span> <span id="f_TGO_valor"></span></div>
       <div class="linha"><span class="titulo">TGP (ALT):</span> <span id="f_TGP_valor"></span></div>
       <div class="linha"><span class="titulo">Bilirrubina Total:</span> <span id="f_Bilirrubina_total_valor"></span></div>
-      <div class="linha"><span class="titulo">Bilirrubina Direta:</span> <span id="f_Bilirrubina_direta_valor"></span></div>
+      <div class .linha><span class="titulo">Bilirrubina Direta:</span> <span id="f_Bilirrubina_direta_valor"></span></div>
       <div class="linha"><span class="titulo">Bilirrubina Indireta:</span> <span id="f_Bilirrubina_indireta_valor"></span></div>
       <div class="linha"><span class="titulo">TP:</span> <span id="f_TP_valor"></span></div>
       <div class="linha"><span class="titulo">kTTP:</span> <span id="f_KTTP_valor"></span></div>
@@ -365,7 +364,7 @@
   </div>
 
   <script>
-    // FUNÇÃO para calcular SC automaticamente
+    // função para calcular SC automaticamente
     function calcularSC() {
       const peso = parseFloat(document.getElementById('Peso_kg').value);
       const altura = parseFloat(document.getElementById('Altura_cm').value);
@@ -379,12 +378,11 @@
     document.getElementById('Peso_kg').addEventListener('input', calcularSC);
     document.getElementById('Altura_cm').addEventListener('input', calcularSC);
 
-    // Ao submeter, preencher ficha e gerar PDF
     document.getElementById('formQuimio').addEventListener('submit', async function(event) {
       event.preventDefault();
       const form = event.target;
 
-      // Lista de campos simples
+      // Campos simples (todos os valores de exame etc.)
       const campos = [
         "Paciente_ID","Nome_Completo","Sexo","Data_Nascimento","Idade","Peso_kg","Altura_cm","SC_m2",
         "ECOG","Mulher_em_idade_fertil","Data_Avaliacao","beta_hCG_valor","Creatinina_valor",
@@ -394,10 +392,10 @@
         "Observacoes","Avaliacao_Minima_Concluida","Data_Conclusao","Medico_Responsavel","CRM"
       ];
 
-      // Campos específicos ECG / ECO
+      // ECG / ECO campos
       const ECG_frequencia = form.ECG_frequencia.value;
+      let ritmo = '';
       const ritmoRadios = form.elements["ECG_ritmo"];
-      let ritmo = "";
       if (ritmoRadios) {
         for (const r of ritmoRadios) {
           if (r.checked) {
@@ -416,13 +414,13 @@
       const ECO_sistolica = form.ECO_sistolica.value;
       const ECO_diastolica = form.ECO_diastolica.value;
 
-      // Preencher ficha da tela
+      // Preencher ficha visual
       campos.forEach(nomeCampo => {
         const input = form[nomeCampo];
         const valor = input ? input.value : '';
-        const target = document.getElementById('f_' + nomeCampo);
-        if (target) {
-          target.textContent = valor || '—';
+        const out = document.getElementById('f_' + nomeCampo);
+        if (out) {
+          out.textContent = valor || '—';
         }
       });
       document.getElementById('f_ECG_frequencia').textContent = ECG_frequencia || '—';
@@ -435,55 +433,87 @@
       const ficha = document.getElementById('fichaImpressao');
       ficha.style.display = 'block';
 
-      // Gerar PDF com jsPDF
+      // Gerar PDF bonito com jsPDF
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({
         unit: 'pt',
         format: 'a4'
       });
 
-      const linhaAltura = 14;
-      let y = 40;
+      const margin = 40;
+      const contentWidth = doc.internal.pageSize.width - margin * 2;
+      let y = margin;
 
-      doc.setFontSize(16);
-      doc.text("Ficha de Avaliação Pré‑Quimioterapia", 40, y);
-      y += 30;
-      doc.setFontSize(12);
+      // inserir logo
+      const logoUrl = "https://vidahematologia.com.br/wp-content/uploads/2025/02/vida-hematologia-logo.png";
+      const imgWidth = 120;
+      const imgHeight = 60;
 
-      function printLinha(titulo, valor) {
-        doc.text(titulo + ": " + valor, 40, y);
-        y += linhaAltura;
+      try {
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.src = logoUrl;
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+        doc.addImage(img, 'PNG', margin, y, imgWidth, imgHeight);
+        y += imgHeight + 10;
+      } catch (e) {
+        // se falhar no logo, apenas pula
+        y += 10;
       }
 
-      // Exibir campos gerais
+      doc.setFontSize(16);
+      doc.text("Ficha de Avaliação Pré‑Quimioterapia", margin, y);
+      y += 25;
+      doc.setFontSize(12);
+
+      const linhaAltura = 18;
+
+      function printLinha(titulo, valor) {
+        const text = titulo + ": " + (valor || "—");
+        // quebra de linha se for muito longo
+        const split = doc.splitTextToSize(text, contentWidth);
+        doc.text(split, margin, y);
+        y += linhaAltura * (split.length);
+      }
+
+      // organizar em colunas pequenas pode servir, mas aqui seguimos listas simples
       campos.forEach(nomeCampo => {
         const elem = document.getElementById('f_' + nomeCampo);
         const val = elem ? elem.textContent : '';
         printLinha(nomeCampo, val);
       });
 
-      // ECG e ECO
-      doc.text("ECG", 40, y);
+      // ECG seção
+      doc.setFontSize(14);
+      doc.text("ECG", margin, y);
       y += linhaAltura;
-      printLinha("Frequência cardíaca (bpm)", ECG_frequencia || '—');
-      printLinha("Ritmo", ritmo || '—');
-      printLinha("QTc (ms)", ECG_QTc || '—');
+      doc.setFontSize(12);
+      printLinha("Frequência cardíaca (bpm)", ECG_frequencia);
+      printLinha("Ritmo", ritmo);
+      printLinha("QTc (ms)", ECG_QTc);
 
-      doc.text("ECOcardiograma", 40, y);
+      // ECO section
+      doc.setFontSize(14);
+      doc.text("ECOcardiograma", margin, y);
       y += linhaAltura;
-      printLinha("FE (%)", ECO_FE || '—');
-      printLinha("Função sistólica", ECO_sistolica || '—');
-      printLinha("Função diastólica", ECO_diastolica || '—');
+      doc.setFontSize(12);
+      printLinha("Fração de ejeção (FE) (%)", ECO_FE);
+      printLinha("Função sistólica", ECO_sistolica);
+      printLinha("Função diastólica", ECO_diastolica);
 
-      // Observações finais
-      const obs = document.getElementById('f_Observacoes').textContent || '—';
-      printLinha("Observações", obs);
+      // Observações e final
+      printLinha("Observações", document.getElementById('f_Observacoes').textContent);
 
-      // Assinatura / rodapé se quiser
+      // rodapé com data
+      const hoje = new Date();
+      const strData = hoje.toLocaleString();
       doc.setFontSize(10);
-      doc.text(`Gerado em: ${new Date().toLocaleString()}`, 40, doc.internal.pageSize.height - 40);
+      doc.text(`Gerado em: ${strData}`, margin, doc.internal.pageSize.height - margin);
 
-      // Salvar / abrir PDF
+      // salvar PDF
       doc.save("Ficha_Avaliacao_Quimioterapia.pdf");
     });
   </script>
