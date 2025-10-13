@@ -299,7 +299,16 @@
 
       // gerar PDF com layout tabelado
       const { jsPDF } = window.jspdf;
+      if (!window.jsPDF) {
+        window.jsPDF = jsPDF;
+      }
+
       const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+
+      if (typeof doc.autoTable !== 'function') {
+        alert('Não foi possível carregar o módulo de tabelas (jsPDF-AutoTable). Verifique a conexão e tente novamente.');
+        return;
+      }
 
       const margin = 40;
       const pageWidth = doc.internal.pageSize.width;
@@ -324,7 +333,7 @@
       }
 
       const filtrarCampos = (entradas) =>
-        entradas.filter(([, valor]) => valor && valor.toString().trim() !== "");
+        entradas.filter(([, valor]) => valor !== undefined && valor !== null && valor.toString().trim() !== "");
 
       const adicionarOuMensagem = (config) => {
         doc.setFont(undefined, 'bold');
