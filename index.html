@@ -3,23 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Avaliação Pré‑Quimioterapia – Ficha</title>
+  <title>Avaliação Pré‑Quimioterapia – Ficha / PDF</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      background: #fff;
     }
     .container {
-      max-width: 1100px;
-      margin: auto;
-      background: #fff;
+      max-width: 740px;
+      margin: 30px auto;
       padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      background: #fff;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
     }
     h2 {
       text-align: center;
+      margin-bottom: 20px;
     }
     form .campo {
       margin-bottom: 12px;
@@ -29,9 +32,12 @@
       font-weight: bold;
       margin-bottom: 4px;
     }
-    form .campo input, form .campo select, form .campo textarea {
+    form .campo input,
+    form .campo select,
+    form .campo textarea {
       width: 100%;
       padding: 6px;
+      font-size: 14px;
       box-sizing: border-box;
       border: 1px solid #ccc;
       border-radius: 4px;
@@ -41,25 +47,25 @@
       min-height: 40px;
     }
     button {
-      display: block;
-      margin: 20px auto;
+      margin-top: 20px;
       padding: 10px 24px;
-      font-size: 16px;
       background: #007bff;
       color: #fff;
+      font-size: 16px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
     }
     button:hover {
-      background: #0056b3;
+      background-color: #0056b3;
     }
 
     .ficha {
       display: none;
       margin-top: 30px;
-      border: 1px solid #333;
-      padding: 15px;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #000;
     }
     .ficha h3 {
       text-align: center;
@@ -67,21 +73,27 @@
       text-decoration: underline;
     }
     .ficha .linha {
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
     .ficha .linha span.titulo {
       font-weight: bold;
     }
 
     @media print {
-      body .container * {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .container * {
         visibility: hidden;
       }
       .ficha {
         display: block;
         visibility: visible;
-      }
-      .ficha {
+        margin: 0 auto;
+        padding: 0;
+        width: 100%;
+        max-width: 740px;
         border: none;
       }
     }
@@ -91,7 +103,7 @@
   <div class="container">
     <h2>Avaliação Pré‑Quimioterapia</h2>
     <form id="formQuimio">
-      <!-- Campos identificadores e demográficos -->
+      <!-- Identificação / Demografia -->
       <div class="campo">
         <label for="Paciente_ID">Paciente_ID</label>
         <input type="text" id="Paciente_ID" name="Paciente_ID" required>
@@ -118,15 +130,15 @@
       </div>
       <div class="campo">
         <label for="Peso_kg">Peso (kg)</label>
-        <input type="number" step="0.1" id="Peso_kg" name="Peso_kg">
+        <input type="number" id="Peso_kg" name="Peso_kg" step="0.1">
       </div>
       <div class="campo">
         <label for="Altura_cm">Altura (cm)</label>
-        <input type="number" step="0.1" id="Altura_cm" name="Altura_cm">
+        <input type="number" id="Altura_cm" name="Altura_cm" step="0.1">
       </div>
       <div class="campo">
         <label for="SC_m2">SC (m²)</label>
-        <input type="number" step="0.01" id="SC_m2" name="SC_m2">
+        <input type="number" id="SC_m2" name="SC_m2" step="0.01" readonly>
       </div>
       <div class="campo">
         <label for="ECOG">ECOG (0–4)</label>
@@ -141,363 +153,72 @@
         </select>
       </div>
 
-      <!-- Repetir estrutura para cada exame: valor + data -->
+      <!-- Data geral da avaliação / exames -->
+      <div class="campo">
+        <label for="Data_Avaliacao">Data da avaliação / exames</label>
+        <input type="date" id="Data_Avaliacao" name="Data_Avaliacao">
+      </div>
+
+      <!-- Exames (valor somente) -->
       <div class="campo">
         <label for="beta_hCG_valor">beta‑hCG Valor</label>
         <input type="text" id="beta_hCG_valor" name="beta_hCG_valor">
       </div>
       <div class="campo">
-        <label for="beta_hCG_data">beta‑hCG Data</label>
-        <input type="date" id="beta_hCG_data" name="beta_hCG_data">
-      </div>
-
-      <div class="campo">
         <label for="Creatinina_valor">Creatinina Valor</label>
         <input type="text" id="Creatinina_valor" name="Creatinina_valor">
       </div>
-      <div class="campo">
-        <label for="Creatinina_data">Creatinina Data</label>
-        <input type="date" id="Creatinina_data" name="Creatinina_data">
-      </div>
-
       <div class="campo">
         <label for="Ureia_valor">Ureia Valor</label>
         <input type="text" id="Ureia_valor" name="Ureia_valor">
       </div>
       <div class="campo">
-        <label for="Ureia_data">Ureia Data</label>
-        <input type="date" id="Ureia_data" name="Ureia_data">
-      </div>
-
-      <div class="campo">
         <label for="Sodio_valor">Sódio Valor</label>
         <input type="text" id="Sodio_valor" name="Sodio_valor">
       </div>
-      <div class="campo">
-        <label for="Sodio_data">Sódio Data</label>
-        <input type="date" id="Sodio_data" name="Sodio_data">
-      </div>
-
       <div class="campo">
         <label for="Potassio_valor">Potássio Valor</label>
         <input type="text" id="Potassio_valor" name="Potassio_valor">
       </div>
       <div class="campo">
-        <label for="Potassio_data">Potássio Data</label>
-        <input type="date" id="Potassio_data" name="Potassio_data">
-      </div>
-
-      <div class="campo">
         <label for="Magnesio_valor">Magnésio Valor</label>
         <input type="text" id="Magnesio_valor" name="Magnesio_valor">
       </div>
-      <div class="campo">
-        <label for="Magnesio_data">Magnésio Data</label>
-        <input type="date" id="Magnesio_data" name="Magnesio_data">
-      </div>
-
       <div class="campo">
         <label for="Fosforo_valor">Fósforo Valor</label>
         <input type="text" id="Fosforo_valor" name="Fosforo_valor">
       </div>
       <div class="campo">
-        <label for="Fosforo_data">Fósforo Data</label>
-        <input type="date" id="Fosforo_data" name="Fosforo_data">
-      </div>
-
-      <div class="campo">
         <label for="Calcio_ionico_valor">Cálcio iônico Valor</label>
         <input type="text" id="Calcio_ionico_valor" name="Calcio_ionico_valor">
       </div>
-      <div class="campo">
-        <label for="Calcio_ionico_data">Cálcio iônico Data</label>
-        <input type="date" id="Calcio_ionico_data" name="Calcio_ionico_data">
-      </div>
-
       <div class="campo">
         <label for="Acido_Urico_valor">Ácido Úrico Valor</label>
         <input type="text" id="Acido_Urico_valor" name="Acido_Urico_valor">
       </div>
       <div class="campo">
-        <label for="Acido_Urico_data">Ácido Úrico Data</label>
-        <input type="date" id="Acido_Urico_data" name="Acido_Urico_data">
-      </div>
-
-      <div class="campo">
         <label for="LDH_valor">LDH Valor</label>
         <input type="text" id="LDH_valor" name="LDH_valor">
       </div>
-      <div class="campo">
-        <label for="LDH_data">LDH Data</label>
-        <input type="date" id="LDH_data" name="LDH_data">
-      </div>
-
       <div class="campo">
         <label for="Albumina_valor">Albumina Valor</label>
         <input type="text" id="Albumina_valor" name="Albumina_valor">
       </div>
       <div class="campo">
-        <label for="Albumina_data">Albumina Data</label>
-        <input type="date" id="Albumina_data" name="Albumina_data">
-      </div>
-
-      <div class="campo">
         <label for="TGO_valor">TGO (AST) Valor</label>
         <input type="text" id="TGO_valor" name="TGO_valor">
       </div>
-      <div class="campo">
-        <label for="TGO_data">TGO Data</label>
-        <input type="date" id="TGO_data" name="TGO_data">
-      </div>
-
       <div class="campo">
         <label for="TGP_valor">TGP (ALT) Valor</label>
         <input type="text" id="TGP_valor" name="TGP_valor">
       </div>
       <div class="campo">
-        <label for="TGP_data">TGP Data</label>
-        <input type="date" id="TGP_data" name="TGP_data">
-      </div>
-
-      <div class="campo">
         <label for="Bilirrubina_total_valor">Bilirrubina Total Valor</label>
         <input type="text" id="Bilirrubina_total_valor" name="Bilirrubina_total_valor">
       </div>
-      <div class="campo">
-        <label for="Bilirrubina_total_data">Bilirrubina Total Data</label>
-        <input type="date" id="Bilirrubina_total_data" name="Bilirrubina_total_data">
-      </div>
-
       <div class="campo">
         <label for="Bilirrubina_direta_valor">Bilirrubina Direta Valor</label>
         <input type="text" id="Bilirrubina_direta_valor" name="Bilirrubina_direta_valor">
       </div>
       <div class="campo">
-        <label for="Bilirrubina_direta_data">Bilirrubina Direta Data</label>
-        <input type="date" id="Bilirrubina_direta_data" name="Bilirrubina_direta_data">
-      </div>
-
-      <div class="campo">
-        <label for="Bilirrubina_indireta_valor">Bilirrubina Indireta Valor</label>
-        <input type="text" id="Bilirrubina_indireta_valor" name="Bilirrubina_indireta_valor">
-      </div>
-      <div class="campo">
-        <label for="Bilirrubina_indireta_data">Bilirrubina Indireta Data</label>
-        <input type="date" id="Bilirrubina_indireta_data" name="Bilirrubina_indireta_data">
-      </div>
-
-      <div class="campo">
-        <label for="Hemograma_data">Hemograma Data</label>
-        <input type="date" id="Hemograma_data" name="Hemograma_data">
-      </div>
-
-      <div class="campo">
-        <label for="TP_valor">TP Valor</label>
-        <input type="text" id="TP_valor" name="TP_valor">
-      </div>
-      <div class="campo">
-        <label for="TP_data">TP Data</label>
-        <input type="date" id="TP_data" name="TP_data">
-      </div>
-
-      <div class="campo">
-        <label for="KTTP_valor">kTTP Valor</label>
-        <input type="text" id="KTTP_valor" name="KTTP_valor">
-      </div>
-      <div class="campo">
-        <label for="KTTP_data">kTTP Data</label>
-        <input type="date" id="KTTP_data" name="KTTP_data">
-      </div>
-
-      <div class="campo">
-        <label for="Fibrinogenio_valor">Fibrinogênio Valor</label>
-        <input type="text" id="Fibrinogenio_valor" name="Fibrinogenio_valor">
-      </div>
-      <div class="campo">
-        <label for="Fibrinogenio_data">Fibrinogênio Data</label>
-        <input type="date" id="Fibrinogenio_data" name="Fibrinogenio_data">
-      </div>
-
-      <div class="campo">
-        <label for="HIV_resultado">HIV Resultado</label>
-        <input type="text" id="HIV_resultado" name="HIV_resultado">
-      </div>
-      <div class="campo">
-        <label for="HIV_data">HIV Data</label>
-        <input type="date" id="HIV_data" name="HIV_data">
-      </div>
-
-      <div class="campo">
-        <label for="HCV_resultado">HCV Resultado</label>
-        <input type="text" id="HCV_resultado" name="HCV_resultado">
-      </div>
-      <div class="campo">
-        <label for="HCV_data">HCV Data</label>
-        <input type="date" id="HCV_data" name="HCV_data">
-      </div>
-
-      <div class="campo">
-        <label for="HBsAg_resultado">HBsAg Resultado</label>
-        <input type="text" id="HBsAg_resultado" name="HBsAg_resultado">
-      </div>
-      <div class="campo">
-        <label for="HBsAg_data">HBsAg Data</label>
-        <input type="date" id="HBsAg_data" name="HBsAg_data">
-      </div>
-
-      <div class="campo">
-        <label for="antiHBc_total_resultado">antiHBc total Resultado</label>
-        <input type="text" id="antiHBc_total_resultado" name="antiHBc_total_resultado">
-      </div>
-      <div class="campo">
-        <label for="antiHBc_total_data">antiHBc total Data</label>
-        <input type="date" id="antiHBc_total_data" name="antiHBc_total_data">
-      </div>
-
-      <div class="campo">
-        <label for="VDRL_resultado">VDRL Resultado</label>
-        <input type="text" id="VDRL_resultado" name="VDRL_resultado">
-      </div>
-      <div class="campo">
-        <label for="VDRL_data">VDRL Data</label>
-        <input type="date" id="VDRL_data" name="VDRL_data">
-      </div>
-
-      <div class="campo">
-        <label for="HTLV_I_II_resultado">HTLV I/II Resultado</label>
-        <input type="text" id="HTLV_I_II_resultado" name="HTLV_I_II_resultado">
-      </div>
-      <div class="campo">
-        <label for="HTLV_I_II_data">HTLV I/II Data</label>
-        <input type="date" id="HTLV_I_II_data" name="HTLV_I_II_data">
-      </div>
-
-      <div class="campo">
-        <label for="ECG_data">ECG Data</label>
-        <input type="date" id="ECG_data" name="ECG_data">
-      </div>
-
-      <div class="campo">
-        <label for="ECOcardiograma_data">ECOcardiograma Data</label>
-        <input type="date" id="ECOcardiograma_data" name="ECOcardiograma_data">
-      </div>
-
-      <div class="campo">
-        <label for="Observacoes">Observações</label>
-        <textarea id="Observacoes" name="Observacoes"></textarea>
-      </div>
-
-      <div class="campo">
-        <label for="Avaliacao_Minima_Concluida">Avaliação Mínima Concluída (S/N)</label>
-        <select id="Avaliacao_Minima_Concluida" name="Avaliacao_Minima_Concluida">
-          <option value="">Selecione</option>
-          <option value="S">S</option>
-          <option value="N">N</option>
-        </select>
-      </div>
-
-      <div class="campo">
-        <label for="Data_Conclusao">Data de Conclusão</label>
-        <input type="date" id="Data_Conclusao" name="Data_Conclusao">
-      </div>
-
-      <div class="campo">
-        <label for="Medico_Responsavel">Médico Responsável</label>
-        <input type="text" id="Medico_Responsavel" name="Medico_Responsavel">
-      </div>
-
-      <div class="campo">
-        <label for="CRM">CRM</label>
-        <input type="text" id="CRM" name="CRM">
-      </div>
-
-      <button type="submit">Gerar Ficha para Impressão</button>
-    </form>
-
-    <div class="ficha" id="fichaImpressao">
-      <h3>Ficha de Avaliação Pré‑Quimioterapia</h3>
-      <div class="linha"><span class="titulo">Paciente_ID:</span> <span id="f_Paciente_ID"></span></div>
-      <div class="linha"><span class="titulo">Nome Completo:</span> <span id="f_Nome_Completo"></span></div>
-      <div class="linha"><span class="titulo">Sexo:</span> <span id="f_Sexo"></span></div>
-      <div class="linha"><span class="titulo">Data Nascimento:</span> <span id="f_Data_Nascimento"></span></div>
-      <div class="linha"><span class="titulo">Idade (anos):</span> <span id="f_Idade"></span></div>
-      <div class="linha"><span class="titulo">Peso (kg):</span> <span id="f_Peso_kg"></span></div>
-      <div class="linha"><span class="titulo">Altura (cm):</span> <span id="f_Altura_cm"></span></div>
-      <div class="linha"><span class="titulo">SC (m²):</span> <span id="f_SC_m2"></span></div>
-      <div class="linha"><span class="titulo">ECOG:</span> <span id="f_ECOG"></span></div>
-      <div class="linha"><span class="titulo">Mulher em idade fértil?</span> <span id="f_Mulher_em_idade_fertil"></span></div>
-
-      <div class="linha"><span class="titulo">beta‑hCG Valor / Data:</span> <span id="f_beta_hCG_valor"></span> / <span id="f_beta_hCG_data"></span></div>
-      <div class="linha"><span class="titulo">Creatinina Valor / Data:</span> <span id="f_Creatinina_valor"></span> / <span id="f_Creatinina_data"></span></div>
-      <div class="linha"><span class="titulo">Ureia Valor / Data:</span> <span id="f_Ureia_valor"></span> / <span id="f_Ureia_data"></span></div>
-      <div class="linha"><span class="titulo">Sódio Valor / Data:</span> <span id="f_Sodio_valor"></span> / <span id="f_Sodio_data"></span></div>
-      <div class="linha"><span class="titulo">Potássio Valor / Data:</span> <span id="f_Potassio_valor"></span> / <span id="f_Potassio_data"></span></div>
-      <div class="linha"><span class="titulo">Magnésio Valor / Data:</span> <span id="f_Magnesio_valor"></span> / <span id="f_Magnesio_data"></span></div>
-      <div class="linha"><span class="titulo">Fósforo Valor / Data:</span> <span id="f_Fosforo_valor"></span> / <span id="f_Fosforo_data"></span></div>
-      <div class="linha"><span class="titulo">Cálcio iônico Valor / Data:</span> <span id="f_Calcio_ionico_valor"></span> / <span id="f_Calcio_ionico_data"></span></div>
-      <div class="linha"><span class="titulo">Ácido Úrico Valor / Data:</span> <span id="f_Acido_Urico_valor"></span> / <span id="f_Acido_Urico_data"></span></div>
-      <div class="linha"><span class="titulo">LDH Valor / Data:</span> <span id="f_LDH_valor"></span> / <span id="f_LDH_data"></span></div>
-      <div class="linha"><span class="titulo">Albumina Valor / Data:</span> <span id="f_Albumina_valor"></span> / <span id="f_Albumina_data"></span></div>
-      <div class="linha"><span class="titulo">TGO (AST) Valor / Data:</span> <span id="f_TGO_valor"></span> / <span id="f_TGO_data"></span></div>
-      <div class="linha"><span class="titulo">TGP (ALT) Valor / Data:</span> <span id="f_TGP_valor"></span> / <span id="f_TGP_data"></span></div>
-      <div class="linha"><span class="titulo">Bilirrubina Total Valor / Data:</span> <span id="f_Bilirrubina_total_valor"></span> / <span id="f_Bilirrubina_total_data"></span></div>
-      <div class="linha"><span class="titulo">Bilirrubina Direta Valor / Data:</span> <span id="f_Bilirrubina_direta_valor"></span> / <span id="f_Bilirrubina_direta_data"></span></div>
-      <div class="linha"><span class="titulo">Bilirrubina Indireta Valor / Data:</span> <span id="f_Bilirrubina_indireta_valor"></span> / <span id="f_Bilirrubina_indireta_data"></span></div>
-      <div class="linha"><span class="titulo">Hemograma Data:</span> <span id="f_Hemograma_data"></span></div>
-      <div class="linha"><span class="titulo">TP Valor / Data:</span> <span id="f_TP_valor"></span> / <span id="f_TP_data"></span></div>
-      <div class="linha"><span class="titulo">kTTP Valor / Data:</span> <span id="f_KTTP_valor"></span> / <span id="f_KTTP_data"></span></div>
-      <div class="linha"><span class="titulo">Fibrinogênio Valor / Data:</span> <span id="f_Fibrinogenio_valor"></span> / <span id="f_Fibrinogenio_data"></span></div>
-      <div class="linha"><span class="titulo">HIV Resultado / Data:</span> <span id="f_HIV_resultado"></span> / <span id="f_HIV_data"></span></div>
-      <div class="linha"><span class="titulo">HCV Resultado / Data:</span> <span id="f_HCV_resultado"></span> / <span id="f_HCV_data"></span></div>
-      <div class="linha"><span class="titulo">HBsAg Resultado / Data:</span> <span id="f_HBsAg_resultado"></span> / <span id="f_HBsAg_data"></span></div>
-      <div class="linha"><span class="titulo">antiHBc total Resultado / Data:</span> <span id="f_antiHBc_total_resultado"></span> / <span id="f_antiHBc_total_data"></span></div>
-      <div class="linha"><span class="titulo">VDRL Resultado / Data:</span> <span id="f_VDRL_resultado"></span> / <span id="f_VDRL_data"></span></div>
-      <div class="linha"><span class="titulo">HTLV I/II Resultado / Data:</span> <span id="f_HTLV_I_II_resultado"></span> / <span id="f_HTLV_I_II_data"></span></div>
-      <div class="linha"><span class="titulo">ECG Data:</span> <span id="f_ECG_data"></span></div>
-      <div class="linha"><span class="titulo">ECOcardiograma Data:</span> <span id="f_ECOcardiograma_data"></span></div>
-      <div class="linha"><span class="titulo">Observações:</span> <span id="f_Observacoes"></span></div>
-      <div class="linha"><span class="titulo">Avaliação Mínima Concluída:</span> <span id="f_Avaliacao_Minima_Concluida"></span></div>
-      <div class="linha"><span class="titulo">Data de Conclusão:</span> <span id="f_Data_Conclusao"></span></div>
-      <div class="linha"><span class="titulo">Médico Responsável:</span> <span id="f_Medico_Responsavel"></span></div>
-      <div class="linha"><span class="titulo">CRM:</span> <span id="f_CRM"></span></div>
-    </div>
-  </div>
-
-  <script>
-    document.getElementById('formQuimio').addEventListener('submit', function(event) {
-      event.preventDefault();
-      const form = event.target;
-
-      // Lê todos os campos do formulário
-      const campos = [
-        "Paciente_ID","Nome_Completo","Sexo","Data_Nascimento","Idade","Peso_kg","Altura_cm","SC_m2",
-        "ECOG","Mulher_em_idade_fertil","beta_hCG_valor","beta_hCG_data","Creatinina_valor","Creatinina_data",
-        "Ureia_valor","Ureia_data","Sodio_valor","Sodio_data","Potassio_valor","Potassio_data","Magnesio_valor","Magnesio_data",
-        "Fosforo_valor","Fosforo_data","Calcio_ionico_valor","Calcio_ionico_data","Acido_Urico_valor","Acido_Urico_data",
-        "LDH_valor","LDH_data","Albumina_valor","Albumina_data","TGO_valor","TGO_data","TGP_valor","TGP_data",
-        "Bilirrubina_total_valor","Bilirrubina_total_data","Bilirrubina_direta_valor","Bilirrubina_direta_data",
-        "Bilirrubina_indireta_valor","Bilirrubina_indireta_data","Hemograma_data","TP_valor","TP_data","KTTP_valor","KTTP_data",
-        "Fibrinogenio_valor","Fibrinogenio_data","HIV_resultado","HIV_data","HCV_resultado","HCV_data","HBsAg_resultado","HBsAg_data",
-        "antiHBc_total_resultado","antiHBc_total_data","VDRL_resultado","VDRL_data","HTLV_I_II_resultado","HTLV_I_II_data",
-        "ECG_data","ECOcardiograma_data","Observacoes","Avaliacao_Minima_Concluida","Data_Conclusao","Medico_Responsavel","CRM"
-      ];
-
-      campos.forEach(nomeCampo => {
-        const input = form[nomeCampo];
-        const valor = input ? input.value : '';
-        const out = document.getElementById('f_' + nomeCampo);
-        if (out) {
-          out.textContent = valor || '—';
-        }
-      });
-
-      // Exibe a ficha
-      const ficha = document.getElementById('fichaImpressao');
-      ficha.style.display = 'block';
-
-      // Acionar impressão automática (se desejar)
-      window.print();
-    });
-  </script>
-</body>
-</html>
+        <label for="Bilirrubina_indireta_valor">Bilirrubina Ind
