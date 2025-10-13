@@ -221,4 +221,271 @@
         <input type="text" id="Bilirrubina_direta_valor" name="Bilirrubina_direta_valor">
       </div>
       <div class="campo">
-        <label for="Bilirrubina_indireta_valor">Bilirrubina Ind
+        <label for="Bilirrubina_indireta_valor">Bilirrubina Indireta Valor</label>
+        <input type="text" id="Bilirrubina_indireta_valor" name="Bilirrubina_indireta_valor">
+      </div>
+      <div class="campo">
+        <label for="TP_valor">TP Valor</label>
+        <input type="text" id="TP_valor" name="TP_valor">
+      </div>
+      <div class="campo">
+        <label for="KTTP_valor">kTTP Valor</label>
+        <input type="text" id="KTTP_valor" name="KTTP_valor">
+      </div>
+      <div class="campo">
+        <label for="Fibrinogenio_valor">Fibrinogênio Valor</label>
+        <input type="text" id="Fibrinogenio_valor" name="Fibrinogenio_valor">
+      </div>
+
+      <!-- Seções ECG e ECOcardio -->
+      <h3>ECG</h3>
+      <div class="campo">
+        <label for="ECG_frequencia">Frequência cardíaca (bpm)</label>
+        <input type="number" id="ECG_frequencia" name="ECG_frequencia">
+      </div>
+      <div class="campo">
+        <label>Ritmo</label>
+        <div>
+          <label><input type="radio" name="ECG_ritmo" value="Sinusal"> Sinusal</label>
+          <label><input type="radio" name="ECG_ritmo" value="Outro"> Outro:</label>
+          <input type="text" id="ECG_ritmo_outro" name="ECG_ritmo_outro" placeholder="Descreva se outro">
+        </div>
+      </div>
+      <div class="campo">
+        <label for="ECG_QTc">Intervalo QTc (ms)</label>
+        <input type="text" id="ECG_QTc" name="ECG_QTc">
+      </div>
+
+      <h3>ECOcardiograma</h3>
+      <div class="campo">
+        <label for="ECO_FE">Fração de ejeção (FE) (%)</label>
+        <input type="text" id="ECO_FE" name="ECO_FE">
+      </div>
+      <div class="campo">
+        <label>Função sistólica</label>
+        <select id="ECO_sistolica" name="ECO_sistolica">
+          <option value="">Selecione</option>
+          <option value="Normal">Normal</option>
+          <option value="Alterada">Alterada</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label>Função diastólica</label>
+        <select id="ECO_diastolica" name="ECO_diastolica">
+          <option value="">Selecione</option>
+          <option value="Normal">Normal</option>
+          <option value="Alterada">Alterada</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="Observacoes">Observações</label>
+        <textarea id="Observacoes" name="Observacoes"></textarea>
+      </div>
+
+      <div class="campo">
+        <label for="Avaliacao_Minima_Concluida">Avaliação Mínima Concluída (S/N)</label>
+        <select id="Avaliacao_Minima_Concluida" name="Avaliacao_Minima_Concluida">
+          <option value="">Selecione</option>
+          <option value="S">S</option>
+          <option value="N">N</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="Data_Conclusao">Data de Conclusão</label>
+        <input type="date" id="Data_Conclusao" name="Data_Conclusao">
+      </div>
+
+      <div class="campo">
+        <label for="Medico_Responsavel">Médico Responsável</label>
+        <input type="text" id="Medico_Responsavel" name="Medico_Responsavel">
+      </div>
+
+      <div class="campo">
+        <label for="CRM">CRM</label>
+        <input type="text" id="CRM" name="CRM">
+      </div>
+
+      <button type="submit">Gerar Ficha / PDF</button>
+    </form>
+
+    <div class="ficha" id="fichaImpressao">
+      <h3>Ficha de Avaliação Pré‑Quimioterapia</h3>
+      <!-- Linha por linha -->
+      <div class="linha"><span class="titulo">Paciente_ID:</span> <span id="f_Paciente_ID"></span></div>
+      <div class="linha"><span class="titulo">Nome Completo:</span> <span id="f_Nome_Completo"></span></div>
+      <div class="linha"><span class="titulo">Sexo:</span> <span id="f_Sexo"></span></div>
+      <div class="linha"><span class="titulo">Data de Nascimento:</span> <span id="f_Data_Nascimento"></span></div>
+      <div class="linha"><span class="titulo">Idade (anos):</span> <span id="f_Idade"></span></div>
+      <div class="linha"><span class="titulo">Peso (kg):</span> <span id="f_Peso_kg"></span></div>
+      <div class="linha"><span class="titulo">Altura (cm):</span> <span id="f_Altura_cm"></span></div>
+      <div class="linha"><span class="titulo">SC (m²):</span> <span id="f_SC_m2"></span></div>
+      <div class="linha"><span class="titulo">ECOG:</span> <span id="f_ECOG"></span></div>
+      <div class="linha"><span class="titulo">Mulher em idade fértil?</span> <span id="f_Mulher_em_idade_fertil"></span></div>
+      <div class="linha"><span class="titulo">Data da Avaliação / Exames:</span> <span id="f_Data_Avaliacao"></span></div>
+      
+      <h4>Exames Laboratoriais</h4>
+      <div class="linha"><span class="titulo">beta‑hCG Valor:</span> <span id="f_beta_hCG_valor"></span></div>
+      <div class="linha"><span class="titulo">Creatinina:</span> <span id="f_Creatinina_valor"></span></div>
+      <div class="linha"><span class="titulo">Ureia:</span> <span id="f_Ureia_valor"></span></div>
+      <div class="linha"><span class="titulo">Sódio:</span> <span id="f_Sodio_valor"></span></div>
+      <div class="linha"><span class="titulo">Potássio:</span> <span id="f_Potassio_valor"></span></div>
+      <div class="linha"><span class="titulo">Magnésio:</span> <span id="f_Magnesio_valor"></span></div>
+      <div class="linha"><span class="titulo">Fósforo:</span> <span id="f_Fosforo_valor"></span></div>
+      <div class="linha"><span class="titulo">Cálcio iônico:</span> <span id="f_Calcio_ionico_valor"></span></div>
+      <div class="linha"><span class="titulo">Ácido Úrico:</span> <span id="f_Acido_Urico_valor"></span></div>
+      <div class="linha"><span class="titulo">LDH:</span> <span id="f_LDH_valor"></span></div>
+      <div class="linha"><span class="titulo">Albumina:</span> <span id="f_Albumina_valor"></span></div>
+      <div class="linha"><span class="titulo">TGO (AST):</span> <span id="f_TGO_valor"></span></div>
+      <div class="linha"><span class="titulo">TGP (ALT):</span> <span id="f_TGP_valor"></span></div>
+      <div class="linha"><span class="titulo">Bilirrubina Total:</span> <span id="f_Bilirrubina_total_valor"></span></div>
+      <div class="linha"><span class="titulo">Bilirrubina Direta:</span> <span id="f_Bilirrubina_direta_valor"></span></div>
+      <div class="linha"><span class="titulo">Bilirrubina Indireta:</span> <span id="f_Bilirrubina_indireta_valor"></span></div>
+      <div class="linha"><span class="titulo">TP:</span> <span id="f_TP_valor"></span></div>
+      <div class="linha"><span class="titulo">kTTP:</span> <span id="f_KTTP_valor"></span></div>
+      <div class="linha"><span class="titulo">Fibrinogênio:</span> <span id="f_Fibrinogenio_valor"></span></div>
+
+      <h4>ECG</h4>
+      <div class="linha"><span class="titulo">Freq. cardíaca (bpm):</span> <span id="f_ECG_frequencia"></span></div>
+      <div class="linha"><span class="titulo">Ritmo:</span> <span id="f_ECG_ritmo"></span></div>
+      <div class="linha"><span class="titulo">QTc (ms):</span> <span id="f_ECG_QTc"></span></div>
+
+      <h4>ECOcardiograma</h4>
+      <div class="linha"><span class="titulo">FE (%):</span> <span id="f_ECO_FE"></span></div>
+      <div class="linha"><span class="titulo">Função sistólica:</span> <span id="f_ECO_sistolica"></span></div>
+      <div class="linha"><span class="titulo">Função diastólica:</span> <span id="f_ECO_diastolica"></span></div>
+
+      <div class="linha"><span class="titulo">Observações:</span> <span id="f_Observacoes"></span></div>
+      <div class="linha"><span class="titulo">Avaliação Mínima Concluída:</span> <span id="f_Avaliacao_Minima_Concluida"></span></div>
+      <div class="linha"><span class="titulo">Data de Conclusão:</span> <span id="f_Data_Conclusao"></span></div>
+      <div class="linha"><span class="titulo">Médico Responsável:</span> <span id="f_Medico_Responsavel"></span></div>
+      <div class="linha"><span class="titulo">CRM:</span> <span id="f_CRM"></span></div>
+    </div>
+  </div>
+
+  <script>
+    // FUNÇÃO para calcular SC automaticamente
+    function calcularSC() {
+      const peso = parseFloat(document.getElementById('Peso_kg').value);
+      const altura = parseFloat(document.getElementById('Altura_cm').value);
+      if (!isNaN(peso) && !isNaN(altura)) {
+        const sc = 0.007184 * Math.pow(peso, 0.425) * Math.pow(altura, 0.725);
+        document.getElementById('SC_m2').value = sc.toFixed(2);
+      } else {
+        document.getElementById('SC_m2').value = '';
+      }
+    }
+    document.getElementById('Peso_kg').addEventListener('input', calcularSC);
+    document.getElementById('Altura_cm').addEventListener('input', calcularSC);
+
+    // Ao submeter, preencher ficha e gerar PDF
+    document.getElementById('formQuimio').addEventListener('submit', async function(event) {
+      event.preventDefault();
+      const form = event.target;
+
+      // Lista de campos simples
+      const campos = [
+        "Paciente_ID","Nome_Completo","Sexo","Data_Nascimento","Idade","Peso_kg","Altura_cm","SC_m2",
+        "ECOG","Mulher_em_idade_fertil","Data_Avaliacao","beta_hCG_valor","Creatinina_valor",
+        "Ureia_valor","Sodio_valor","Potassio_valor","Magnesio_valor","Fosforo_valor","Calcio_ionico_valor",
+        "Acido_Urico_valor","LDH_valor","Albumina_valor","TGO_valor","TGP_valor","Bilirrubina_total_valor",
+        "Bilirrubina_direta_valor","Bilirrubina_indireta_valor","TP_valor","KTTP_valor","Fibrinogenio_valor",
+        "Observacoes","Avaliacao_Minima_Concluida","Data_Conclusao","Medico_Responsavel","CRM"
+      ];
+
+      // Campos específicos ECG / ECO
+      const ECG_frequencia = form.ECG_frequencia.value;
+      const ritmoRadios = form.elements["ECG_ritmo"];
+      let ritmo = "";
+      if (ritmoRadios) {
+        for (const r of ritmoRadios) {
+          if (r.checked) {
+            if (r.value === "Outro") {
+              const outro = form.ECG_ritmo_outro.value;
+              ritmo = outro ? outro : "Outro";
+            } else {
+              ritmo = r.value;
+            }
+          }
+        }
+      }
+      const ECG_QTc = form.ECG_QTc.value;
+
+      const ECO_FE = form.ECO_FE.value;
+      const ECO_sistolica = form.ECO_sistolica.value;
+      const ECO_diastolica = form.ECO_diastolica.value;
+
+      // Preencher ficha da tela
+      campos.forEach(nomeCampo => {
+        const input = form[nomeCampo];
+        const valor = input ? input.value : '';
+        const target = document.getElementById('f_' + nomeCampo);
+        if (target) {
+          target.textContent = valor || '—';
+        }
+      });
+      document.getElementById('f_ECG_frequencia').textContent = ECG_frequencia || '—';
+      document.getElementById('f_ECG_ritmo').textContent = ritmo || '—';
+      document.getElementById('f_ECG_QTc').textContent = ECG_QTc || '—';
+      document.getElementById('f_ECO_FE').textContent = ECO_FE || '—';
+      document.getElementById('f_ECO_sistolica').textContent = ECO_sistolica || '—';
+      document.getElementById('f_ECO_diastolica').textContent = ECO_diastolica || '—';
+
+      const ficha = document.getElementById('fichaImpressao');
+      ficha.style.display = 'block';
+
+      // Gerar PDF com jsPDF
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({
+        unit: 'pt',
+        format: 'a4'
+      });
+
+      const linhaAltura = 14;
+      let y = 40;
+
+      doc.setFontSize(16);
+      doc.text("Ficha de Avaliação Pré‑Quimioterapia", 40, y);
+      y += 30;
+      doc.setFontSize(12);
+
+      function printLinha(titulo, valor) {
+        doc.text(titulo + ": " + valor, 40, y);
+        y += linhaAltura;
+      }
+
+      // Exibir campos gerais
+      campos.forEach(nomeCampo => {
+        const elem = document.getElementById('f_' + nomeCampo);
+        const val = elem ? elem.textContent : '';
+        printLinha(nomeCampo, val);
+      });
+
+      // ECG e ECO
+      doc.text("ECG", 40, y);
+      y += linhaAltura;
+      printLinha("Frequência cardíaca (bpm)", ECG_frequencia || '—');
+      printLinha("Ritmo", ritmo || '—');
+      printLinha("QTc (ms)", ECG_QTc || '—');
+
+      doc.text("ECOcardiograma", 40, y);
+      y += linhaAltura;
+      printLinha("FE (%)", ECO_FE || '—');
+      printLinha("Função sistólica", ECO_sistolica || '—');
+      printLinha("Função diastólica", ECO_diastolica || '—');
+
+      // Observações finais
+      const obs = document.getElementById('f_Observacoes').textContent || '—';
+      printLinha("Observações", obs);
+
+      // Assinatura / rodapé se quiser
+      doc.setFontSize(10);
+      doc.text(`Gerado em: ${new Date().toLocaleString()}`, 40, doc.internal.pageSize.height - 40);
+
+      // Salvar / abrir PDF
+      doc.save("Ficha_Avaliacao_Quimioterapia.pdf");
+    });
+  </script>
+</body>
+</html>
