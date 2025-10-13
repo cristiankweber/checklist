@@ -167,39 +167,27 @@
       event.preventDefault();
       const form = event.target;
 
-      // coletar dados do formulário
-      const data = {
-        Paciente_ID: form.Paciente_ID.value,
-        Nome_Completo: form.Nome_Completo.value,
-        Sexo: form.Sexo.value,
-        Peso_kg: form.Peso_kg.value,
-        Altura_cm: form.Altura_cm.value,
-        SC_m2: form.SC_m2.value,
-        LDH_valor: form.LDH_valor.value,
-        Albumina_valor: form.Albumina_valor.value,
-        ECG_frequencia: form.ECG_frequencia.value,
-        ECG_QTc: form.ECG_QTc.value,
-        ECO_FE: form.ECO_FE.value,
-        ECO_sistolica: form.ECO_sistolica.value,
-        ECO_diastolica: form.ECO_diastolica.value,
-        Observacoes: form.Observacoes.value
-      };
+      // coletar dados do formulário de forma genérica
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
 
-      // determinar ritmo
-      let ritmo = "";
-      const ritmoRadios = form.elements["ECG_ritmo"];
-      if (ritmoRadios) {
-        for (const r of ritmoRadios) {
-          if (r.checked) {
-            if (r.value === "Outro") {
-              ritmo = form.ECG_ritmo_outro.value || "Outro";
-            } else {
-              ritmo = r.value;
-            }
+      // determinar ritmo selecionado
+      const ritmoSelecionado = form.querySelector('input[name="ECG_ritmo"]:checked');
+      data.ECG_ritmo = ritmoSelecionado
+        ? (ritmoSelecionado.value === "Outro"
+            ? (form.ECG_ritmo_outro.value.trim() || "Outro")
+            : ritmoSelecionado.value)
+        : "";
+
+      // garante que campos numéricos sejam apresentados de forma amigável
+      ["Peso_kg", "Altura_cm", "SC_m2", "ECG_frequencia"].forEach((campo) => {
+        if (data[campo]) {
+          const numero = Number(data[campo].replace(',', '.'));
+          if (!Number.isNaN(numero)) {
+            data[campo] = numero.toString().replace('.', ',');
           }
         }
-      }
-      data.ECG_ritmo = ritmo;
+      });
 
       // gerar PDF com layout tabelado
       const { jsPDF } = window.jspdf;
@@ -207,7 +195,9 @@
 
       const margin = 40;
       const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
       const usableWidth = pageWidth - margin * 2;
+      let y = margin;
 
       // inserir logo no topo
       const logoUrl = "https://vidahematologia.com.br/wp-content/uploads/2025/02/vida-hematologia-logo.png";
@@ -225,6 +215,32 @@
         });
       }
 
+      const filtrarCampos = (entradas) =>
+        entradas.filter(([, valor]) => valor && valor.toString().trim() !== "");
+
+      const adicionarOuMensagem = (config) => {
+        doc.setFont(undefined, 'bold');
+        doc.text(config.titulo, margin, y);
+        y += 18;
+        doc.setFont(undefined, 'normal');
+
+        if (config.linhas.length > 0) {
+          doc.autoTable({
+            startY: y,
+            margin: { left: margin, right: margin },
+            tableWidth: usableWidth,
+            theme: 'grid',
+            styles: { fontSize: 10, cellPadding: 4 },
+            head: [config.cabecalho],
+            body: config.linhas
+          });
+          y = doc.lastAutoTable.finalY + 20;
+        } else {
+          doc.text("Sem dados informados.", margin, y);
+          y += 20;
+        }
+      };
+
       (async () => {
         try {
           const img = await loadImage(logoUrl);
@@ -233,7 +249,7 @@
           // falhou carregar logo, ignora
         }
 
-        let y = margin + logoHeight + 20;
+        y = margin + logoHeight + 20;
 
         doc.setFontSize(16);
         doc.text("Ficha de Avaliação Pré‑Quimioterapia", margin, y);
@@ -241,112 +257,79 @@
 
         doc.setFontSize(12);
 
-        // seção “Identificação / Dados Demográficos”
-        doc.setFont(undefined, 'bold');
-        doc.text("Identificação e Dados Demográficos", margin, y);
-        y += 18;
-        doc.setFont(undefined, 'normal');
-
-        const section1 = [
-          ["Paciente_ID", data.Paciente_ID],
-          ["Nome Completo", data.Nome_Completo],
-          ["Sexo", data.Sexo],
-          ["Peso (kg)", data.Peso_kg],
-          ["Altura (cm)", data.Altura_cm],
-          ["SC (m²)", data.SC_m2]
+        const secoes = [
+          {
+            titulo: "Identificação e Dados Demográficos",
+            cabecalho: ['Campo', 'Valor'],
+            linhas: filtrarCampos([
+              ["Paciente_ID", data.Paciente_ID],
+              ["Nome Completo", data.Nome_Completo],
+              ["Sexo", data.Sexo],
+              ["Peso (kg)", data.Peso_kg],
+              ["Altura (cm)", data.Altura_cm],
+              ["SC (m²)", data.SC_m2]
+            ])
+          },
+          {
+            titulo: "Exames Laboratoriais",
+            cabecalho: ['Exame', 'Valor'],
+            linhas: filtrarCampos([
+              ["LDH", data.LDH_valor],
+              ["Albumina", data.Albumina_valor]
+            ])
+          },
+          {
+            titulo: "ECG",
+            cabecalho: ['Parâmetro', 'Valor'],
+            linhas: filtrarCampos([
+              ["Frequência (bpm)", data.ECG_frequencia],
+              ["Ritmo", data.ECG_ritmo],
+              ["QTc (ms)", data.ECG_QTc]
+            ])
+          },
+          {
+            titulo: "ECOcardiograma",
+            cabecalho: ['Parâmetro', 'Valor'],
+            linhas: filtrarCampos([
+              ["Fração de Ejeção (%)", data.ECO_FE],
+              ["Função Sistólica", data.ECO_sistolica],
+              ["Função Diastólica", data.ECO_diastolica]
+            ])
+          }
         ];
-        doc.autoTable({
-          startY: y,
-          margin: { left: margin, right: margin },
-          tableWidth: usableWidth,
-          theme: 'grid',
-          styles: { fontSize: 10, cellPadding: 4 },
-          head: [['Campo', 'Valor']],
-          body: section1,
-          didDrawPage: (dataArg) => { /* nada */ }
-        });
-        y = doc.lastAutoTable.finalY + 20;
 
-        // seção “Exames Bioquímicos / Laboratoriais”
-        doc.setFont(undefined, 'bold');
-        doc.text("Exames Laboratoriais", margin, y);
-        y += 18;
-        doc.setFont(undefined, 'normal');
+        for (const secao of secoes) {
+          if (y + 40 > pageHeight - margin) {
+            doc.addPage();
+            y = margin;
+          }
+          adicionarOuMensagem(secao);
+        }
 
-        const sectionExames = [
-          ["LDH", data.LDH_valor],
-          ["Albumina", data.Albumina_valor]
-          // adicione mais pares [campo, valor] conforme os campos que você incluiu
-        ];
-        doc.autoTable({
-          startY: y,
-          margin: { left: margin, right: margin },
-          tableWidth: usableWidth,
-          theme: 'grid',
-          styles: { fontSize: 10, cellPadding: 4 },
-          head: [['Exame', 'Valor']],
-          body: sectionExames
-        });
-        y = doc.lastAutoTable.finalY + 20;
-
-        // seção ECG
-        doc.setFont(undefined, 'bold');
-        doc.text("ECG", margin, y);
-        y += 18;
-        doc.setFont(undefined, 'normal');
-
-        const sectionECG = [
-          ["Frequência (bpm)", data.ECG_frequencia],
-          ["Ritmo", data.ECG_ritmo],
-          ["QTc (ms)", data.ECG_QTc]
-        ];
-        doc.autoTable({
-          startY: y,
-          margin: { left: margin, right: margin },
-          tableWidth: usableWidth,
-          theme: 'grid',
-          styles: { fontSize: 10, cellPadding: 4 },
-          head: [['Parâmetro', 'Valor']],
-          body: sectionECG
-        });
-        y = doc.lastAutoTable.finalY + 20;
-
-        // seção ECOcardiograma
-        doc.setFont(undefined, 'bold');
-        doc.text("ECOcardiograma", margin, y);
-        y += 18;
-        doc.setFont(undefined, 'normal');
-
-        const sectionECO = [
-          ["Fração de Ejeção (%)", data.ECO_FE],
-          ["Função Sistólica", data.ECO_sistolica],
-          ["Função Diastólica", data.ECO_diastolica]
-        ];
-        doc.autoTable({
-          startY: y,
-          margin: { left: margin, right: margin },
-          tableWidth: usableWidth,
-          theme: 'grid',
-          styles: { fontSize: 10, cellPadding: 4 },
-          head: [['Parâmetro', 'Valor']],
-          body: sectionECO
-        });
-        y = doc.lastAutoTable.finalY + 20;
+        if (y + 60 > pageHeight - margin) {
+          doc.addPage();
+          y = margin;
+        }
 
         // seção Observações / assinatura
         doc.setFont(undefined, 'bold');
         doc.text("Observações", margin, y);
         y += 18;
         doc.setFont(undefined, 'normal');
-        const obsLines = doc.splitTextToSize(data.Observacoes || "", usableWidth);
-        doc.text(obsLines, margin, y);
-        y += obsLines.length * 14 + 20;
+        const obs = data.Observacoes ? data.Observacoes.trim() : "";
+        if (obs) {
+          const obsLines = doc.splitTextToSize(obs, usableWidth);
+          doc.text(obsLines, margin, y);
+          y += obsLines.length * 14 + 20;
+        } else {
+          doc.text("Sem observações adicionais.", margin, y);
+          y += 20;
+        }
 
         // rodapé
         doc.setFontSize(10);
         const hoje = new Date();
-        doc.text(`Gerado em: ${hoje.toLocaleString()}`, margin, doc.internal.pageSize.height - margin);
-        // futuras linhas: médico, CRM etc. (você pode adicionar)
+        doc.text(`Gerado em: ${hoje.toLocaleString()}`, margin, pageHeight - margin);
 
         // salvar PDF
         doc.save("Ficha_Avaliacao_Quimioterapia_Tabelada.pdf");
