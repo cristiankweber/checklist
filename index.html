@@ -316,6 +316,11 @@
         return;
       }
 
+      if (typeof doc.autoTable !== 'function') {
+        alert('Não foi possível carregar o módulo de tabelas (jsPDF-AutoTable). Verifique a conexão e tente novamente.');
+        return;
+      }
+
       const margin = 40;
       const pageWidth = doc.internal.pageSize.width;
       const pageHeight = doc.internal.pageSize.height;
