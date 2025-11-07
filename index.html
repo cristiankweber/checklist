@@ -3,132 +3,71 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Avaliação Pré‑Quimioterapia – PDF Tabelado</title>
-  <!-- jsPDF e AutoTable -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: #fff;
-    }
-    .container {
-      max-width: 740px;
-      margin: auto;
-    }
-    form .campo {
-      margin-bottom: 12px;
-    }
-    form .campo label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-    form .campo input,
-    form .campo select,
-    form .campo textarea {
-      width: 100%;
-      padding: 6px;
-      font-size: 14px;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    form .campo textarea {
-      resize: vertical;
-      min-height: 40px;
-    }
-    button {
-      margin-top: 20px;
-      padding: 10px 24px;
-      background: #007bff;
-      color: #fff;
-      font-size: 16px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-  </style>
+  <title>HemoTransplant Pro | Plataforma de Gestão de TCTH</title>
+  <meta name="description" content="Plataforma completa para gestão de dados clínicos de transplante de células-tronco hematopoiéticas com segurança, conformidade regulatória e experiência moderna." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <script defer src="assets/app.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h2>Formulário de Avaliação Pré‑Quimioterapia</h2>
-    <form id="formQuimio">
-      <!-- Exemplo reduzido de campos; ideal você incluir todos -->
-      <div class="campo">
-        <label for="Paciente_ID">Paciente_ID</label>
-        <input type="text" id="Paciente_ID" name="Paciente_ID" required>
-      </div>
-      <div class="campo">
-        <label for="Nome_Completo">Nome Completo</label>
-        <input type="text" id="Nome_Completo" name="Nome_Completo">
-      </div>
-      <div class="campo">
-        <label for="Sexo">Sexo (M/F)</label>
-        <select id="Sexo" name="Sexo">
-          <option value="">Selecione</option>
-          <option value="M">M</option>
-          <option value="F">F</option>
-        </select>
-      </div>
-      <div class="campo">
-        <label for="Peso_kg">Peso (kg)</label>
-        <input type="number" id="Peso_kg" name="Peso_kg" step="0.1">
-      </div>
-      <div class="campo">
-        <label for="Altura_cm">Altura (cm)</label>
-        <input type="number" id="Altura_cm" name="Altura_cm" step="0.1">
-      </div>
-      <div class="campo">
-        <label for="SC_m2">SC (m²)</label>
-        <input type="number" id="SC_m2" name="SC_m2" step="0.01" readonly>
-      </div>
-
-      <!-- demais campos... -->
-      <div class="campo">
-        <label for="LDH_valor">LDH Valor</label>
-        <input type="text" id="LDH_valor" name="LDH_valor">
-      </div>
-      <div class="campo">
-        <label for="Albumina_valor">Albumina Valor</label>
-        <input type="text" id="Albumina_valor" name="Albumina_valor">
-      </div>
-
-      <h3>ECG</h3>
-      <div class="campo">
-        <label for="ECG_frequencia">Frequência cardíaca (bpm)</label>
-        <input type="number" id="ECG_frequencia" name="ECG_frequencia">
-      </div>
-      <div class="campo">
-        <label>Ritmo</label>
-        <div>
-          <label><input type="radio" name="ECG_ritmo" value="Sinusal"> Sinusal</label>
-          <label><input type="radio" name="ECG_ritmo" value="Outro"> Outro:</label>
-          <input type="text" id="ECG_ritmo_outro" name="ECG_ritmo_outro" placeholder="Descreva se outro">
+  <div class="app-shell">
+    <header class="topbar" aria-label="Barra superior e navegação principal">
+      <div class="brand-area">
+        <span class="brand-logo" aria-hidden="true">HT</span>
+        <div class="brand-text">
+          <strong>HemoTransplant Pro</strong>
+          <span>Sistema integrado de TCTH</span>
         </div>
       </div>
-      <div class="campo">
-        <label for="ECG_QTc">Intervalo QTc (ms)</label>
-        <input type="text" id="ECG_QTc" name="ECG_QTc">
+      <nav class="main-nav" aria-label="Navegação principal">
+        <a class="nav-link is-active" data-target="overview" href="#visao-geral">Visão geral</a>
+        <a class="nav-link" data-target="patients" href="#pacientes">Pacientes</a>
+        <a class="nav-link" data-target="protocols" href="#protocolos">Protocolos</a>
+        <a class="nav-link" data-target="reports" href="#relatorios">Relatórios</a>
+        <a class="nav-link" data-target="governance" href="#governanca">Governança</a>
+      </nav>
+      <div class="topbar-actions">
+        <button class="btn ghost" type="button" id="toggleHelp" aria-expanded="false">
+          <span class="icon">❔</span>
+          <span class="btn-label">Central de ajuda</span>
+        </button>
+        <button class="btn ghost" type="button" id="toggleTheme" aria-pressed="false">
+          <span class="icon" aria-hidden="true">🌙</span>
+          <span class="btn-label">Modo escuro</span>
+        </button>
+        <button class="btn primary" type="button">Iniciar sessão segura</button>
       </div>
+    </header>
 
-      <h3>ECOcardiograma</h3>
-      <div class="campo">
-        <label for="ECO_FE">Fração de ejeção (FE) (%)</label>
-        <input type="text" id="ECO_FE" name="ECO_FE">
+    <aside class="help-drawer" aria-hidden="true" id="helpDrawer">
+      <div class="drawer-header">
+        <h2>Central de ajuda &amp; conformidade</h2>
+        <button class="btn ghost icon-only" type="button" id="closeHelp" aria-label="Fechar central de ajuda">✕</button>
       </div>
-      <div class="campo">
-        <label>Função sistólica</label>
-        <select id="ECO_sistolica" name="ECO_sistolica">
-          <option value="">Selecione</option>
-          <option value="Normal">Normal</option>
-          <option value="Alterada">Alterada</option>
-        </select>
+      <div class="drawer-content">
+        <article>
+          <h3>Conformidade regulatória</h3>
+          <p>
+            O HemoTransplant Pro está alinhado com as diretrizes da ANVISA, GDPR e HIPAA. Todos os acessos são registrados,
+            há segregação de funções e os dados permanecem criptografados em repouso e em trânsito.
+          </p>
+        </article>
+        <article>
+          <h3>Boas práticas de segurança</h3>
+          <ul>
+            <li>Autenticação multifator obrigatória e rotação de senhas a cada 90 dias.</li>
+            <li>Revisões trimestrais de perfis de acesso e trilhas de auditoria exportáveis.</li>
+            <li>Monitoramento ativo de integridade com alertas em tempo real.</li>
+          </ul>
+        </article>
+        <article>
+          <h3>Treinamento e suporte</h3>
+          <p>
+            Equipe clínica e de TI contam com trilhas de onboarding, biblioteca de SOPs e suporte 24/7 dedicado para dúvidas de operação e incidentes.
+          </p>
+        </article>
       </div>
       <div class="campo">
         <label>Função diastólica</label>
@@ -255,7 +194,40 @@
         doc.text("Ficha de Avaliação Pré‑Quimioterapia", margin, y);
         y += 25;
 
-        doc.setFontSize(12);
+      <section class="kpi-grid" aria-label="Indicadores estratégicos">
+        <article class="kpi-card">
+          <header>
+            <span class="kpi-label">Pacientes ativos</span>
+            <span class="kpi-icon" aria-hidden="true">👥</span>
+          </header>
+          <strong class="kpi-value" data-metric="activePatients">32</strong>
+          <p>Em acompanhamento pré ou pós-TCTH nas últimas 12 semanas.</p>
+        </article>
+        <article class="kpi-card">
+          <header>
+            <span class="kpi-label">Taxa de engraftment</span>
+            <span class="kpi-icon" aria-hidden="true">🧬</span>
+          </header>
+          <strong class="kpi-value" data-metric="engraftmentRate">92%</strong>
+          <p>Média rolling dos últimos 30 transplantes.</p>
+        </article>
+        <article class="kpi-card warning">
+          <header>
+            <span class="kpi-label">Alertas críticos</span>
+            <span class="kpi-icon" aria-hidden="true">⚠️</span>
+          </header>
+          <strong class="kpi-value" data-metric="criticalAlerts">3</strong>
+          <p>Eventos infecciosos em investigação imediata.</p>
+        </article>
+        <article class="kpi-card">
+          <header>
+            <span class="kpi-label">Conformidade documental</span>
+            <span class="kpi-icon" aria-hidden="true">📄</span>
+          </header>
+          <strong class="kpi-value" data-metric="complianceScore">98%</strong>
+          <p>Checklist regulatório completo e atualizado.</p>
+        </article>
+      </section>
 
         const secoes = [
           {
@@ -331,10 +303,17 @@
         const hoje = new Date();
         doc.text(`Gerado em: ${hoje.toLocaleString()}`, margin, pageHeight - margin);
 
-        // salvar PDF
-        doc.save("Ficha_Avaliacao_Quimioterapia_Tabelada.pdf");
-      })();
-    });
-  </script>
+  <div class="modal" id="modal-patientDetails" role="dialog" aria-modal="true" aria-labelledby="modalPatientTitle" hidden>
+    <div class="modal-window">
+      <header class="modal-header">
+        <h2 id="modalPatientTitle">Detalhes do paciente</h2>
+        <button class="btn ghost icon-only" type="button" data-close-modal aria-label="Fechar">✕</button>
+      </header>
+      <div class="modal-body" id="patientDetailsBody"></div>
+      <footer class="modal-footer">
+        <button class="btn secondary" type="button" data-close-modal>Fechar</button>
+      </footer>
+    </div>
+  </div>
 </body>
 </html>
