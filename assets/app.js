@@ -86,6 +86,18 @@ const ALLOWED_STATUSES = new Set(['Pré-transplante', 'Condicionamento', 'Pós-i
 
 let patientNoticeTimeout;
 
+const escapeHTML = (value) => {
+  const stringValue = String(value ?? '');
+  const replacements = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  };
+  return stringValue.replace(/[&<>"']/g, (char) => replacements[char]);
+};
+
 function loadPatients() {
   try {
     const stored = storage?.getItem(STORAGE_KEYS.patients);
