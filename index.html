@@ -215,6 +215,14 @@
                   <option value="moderado">Risco moderado</option>
                   <option value="alto">Risco alto</option>
                 </select>
+                <select id="statusFilter" aria-label="Filtrar por status assistencial">
+                  <option value="todos">Todos os status</option>
+                  <option value="Pré-transplante">Pré-transplante</option>
+                  <option value="Condicionamento">Condicionamento</option>
+                  <option value="Pós-imediato">Pós-imediato</option>
+                  <option value="Follow-up">Follow-up</option>
+                </select>
+                <button class="btn ghost small" type="button" id="clearFilters">Limpar filtros</button>
               </div>
             </header>
             <div class="table-wrapper" role="region" aria-live="polite">
@@ -228,7 +236,7 @@
                     <th>D+ pós-transplante</th>
                     <th>Risco</th>
                     <th>Status</th>
-                    <th></th>
+                    <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody id="patientTableBody"></tbody>
@@ -239,6 +247,7 @@
             <header>
               <h2>Registrar paciente</h2>
             </header>
+            <div class="form-notice" id="patientNotice" role="status" aria-live="polite" hidden></div>
             <form id="patientForm" autocomplete="off">
               <div class="form-field">
                 <label for="patientId">ID do paciente</label>
