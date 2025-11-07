@@ -86,6 +86,18 @@ const ALLOWED_STATUSES = new Set(['Pré-transplante', 'Condicionamento', 'Pós-i
 
 let patientNoticeTimeout;
 
+const escapeHTML = (value) => {
+  const stringValue = String(value ?? '');
+  const replacements = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  };
+  return stringValue.replace(/[&<>"']/g, (char) => replacements[char]);
+};
+
 function loadPatients() {
   try {
     const stored = storage?.getItem(STORAGE_KEYS.patients);
@@ -251,16 +263,16 @@ function renderPatients({ query = '', risk = 'todos', status = 'todos' } = {}) {
   filtered.forEach((patient) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${patient.id}</td>
-      <td>${patient.name}</td>
-      <td>${patient.diagnosis}</td>
-      <td>${patient.transplantType}</td>
-      <td>D${patient.daysPost >= 0 ? '+' : ''}${patient.daysPost}</td>
+      <td>${escapeHTML(patient.id)}</td>
+      <td>${escapeHTML(patient.name)}</td>
+      <td>${escapeHTML(patient.diagnosis)}</td>
+      <td>${escapeHTML(patient.transplantType)}</td>
+      <td>${escapeHTML(`D${patient.daysPost >= 0 ? '+' : ''}${patient.daysPost}`)}</td>
       <td>${createRiskBadge(patient.risk)}</td>
       <td>${createStatusPill(patient.status)}</td>
       <td class="actions-cell">
-        <button class="btn ghost small" type="button" data-action="details" data-patient-id="${patient.id}">Detalhes</button>
-        <button class="btn ghost danger small" type="button" data-action="remove" data-patient-id="${patient.id}">Remover</button>
+        <button class="btn ghost small" type="button" data-action="details" data-patient-id="${escapeHTML(patient.id)}">Detalhes</button>
+        <button class="btn ghost danger small" type="button" data-action="remove" data-patient-id="${escapeHTML(patient.id)}">Remover</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -454,14 +466,14 @@ function setupPatientForm() {
 
     container.innerHTML = `
       <dl class="detail-list">
-        <div><dt>ID</dt><dd>${patient.id}</dd></div>
-        <div><dt>Paciente</dt><dd>${patient.name}</dd></div>
-        <div><dt>Diagnóstico</dt><dd>${patient.diagnosis}</dd></div>
-        <div><dt>Tipo de TCTH</dt><dd>${patient.transplantType}</dd></div>
-        <div><dt>Dias pós-transplante</dt><dd>D${patient.daysPost >= 0 ? '+' : ''}${patient.daysPost}</dd></div>
-        <div><dt>Estratificação</dt><dd>${patient.risk}</dd></div>
-        <div><dt>Status</dt><dd>${patient.status}</dd></div>
-        <div><dt>Observações</dt><dd>${patient.notes || 'Nenhuma observação registrada.'}</dd></div>
+        <div><dt>ID</dt><dd>${escapeHTML(patient.id)}</dd></div>
+        <div><dt>Paciente</dt><dd>${escapeHTML(patient.name)}</dd></div>
+        <div><dt>Diagnóstico</dt><dd>${escapeHTML(patient.diagnosis)}</dd></div>
+        <div><dt>Tipo de TCTH</dt><dd>${escapeHTML(patient.transplantType)}</dd></div>
+        <div><dt>Dias pós-transplante</dt><dd>${escapeHTML(`D${patient.daysPost >= 0 ? '+' : ''}${patient.daysPost}`)}</dd></div>
+        <div><dt>Estratificação</dt><dd>${escapeHTML(patient.risk)}</dd></div>
+        <div><dt>Status</dt><dd>${escapeHTML(patient.status)}</dd></div>
+        <div><dt>Observações</dt><dd>${escapeHTML(patient.notes || 'Nenhuma observação registrada.')}</dd></div>
       </dl>
     `;
     modal.hidden = false;
