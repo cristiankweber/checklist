@@ -3,6 +3,21 @@ const STORAGE_KEYS = {
   patients: 'ht-patients-v1'
 };
 
+const storage = (() => {
+  try {
+    if (typeof window === 'undefined' || !('localStorage' in window)) {
+      return null;
+    }
+    const testKey = '__ht-storage-test__';
+    window.localStorage.setItem(testKey, '1');
+    window.localStorage.removeItem(testKey);
+    return window.localStorage;
+  } catch (error) {
+    console.warn('Armazenamento local indisponível. Persistência será desativada.', error);
+    return null;
+  }
+})();
+
 const DEFAULT_PATIENTS = [
   {
     id: 'TCTH-201',
@@ -73,7 +88,7 @@ let patientNoticeTimeout;
 
 function loadPatients() {
   try {
-    const stored = localStorage.getItem(STORAGE_KEYS.patients);
+    const stored = storage?.getItem(STORAGE_KEYS.patients);
     if (stored) {
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed)) {
@@ -108,8 +123,9 @@ function loadPatients() {
 }
 
 function persistPatients(patients) {
+  if (!storage) return;
   try {
-    localStorage.setItem(STORAGE_KEYS.patients, JSON.stringify(patients));
+    storage.setItem(STORAGE_KEYS.patients, JSON.stringify(patients));
   } catch (error) {
     console.warn('Não foi possível salvar os pacientes no armazenamento local.', error);
   }
@@ -130,7 +146,7 @@ function showPatientNotice(message, tone = 'info') {
 }
 
 const state = {
-  theme: localStorage.getItem(STORAGE_KEYS.theme) || 'light',
+  theme: storage?.getItem(STORAGE_KEYS.theme) || 'light',
   helpDrawer: null,
   patients: loadPatients(),
   filters: {
@@ -142,7 +158,9 @@ const state = {
 
 function applyTheme(theme) {
   document.body.dataset.theme = theme === 'dark' ? 'dark' : 'light';
-  localStorage.setItem(STORAGE_KEYS.theme, document.body.dataset.theme);
+  if (storage) {
+    storage.setItem(STORAGE_KEYS.theme, document.body.dataset.theme);
+  }
   const themeToggle = document.getElementById('toggleTheme');
   if (themeToggle) {
     const isDark = document.body.dataset.theme === 'dark';
@@ -475,13 +493,17 @@ function setupQuickSearch() {
 
 function initialize() {
   applyTheme(state.theme);
-  try {
-    const storedPatients = localStorage.getItem(STORAGE_KEYS.patients);
-    if (!storedPatients) {
-      persistPatients(state.patients);
+  if (!storage) {
+    console.info('Dados clínicos serão mantidos somente durante a sessão atual.');
+  } else {
+    try {
+      const storedPatients = storage.getItem(STORAGE_KEYS.patients);
+      if (!storedPatients) {
+        persistPatients(state.patients);
+      }
+    } catch (error) {
+      console.warn('Não foi possível inicializar o armazenamento de pacientes.', error);
     }
-  } catch (error) {
-    console.warn('Não foi possível inicializar o armazenamento de pacientes.', error);
   }
   updateMetrics();
   renderPatients();
