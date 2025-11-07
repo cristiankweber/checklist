@@ -250,19 +250,55 @@ function renderPatients({ query = '', risk = 'todos', status = 'todos' } = {}) {
   tbody.innerHTML = '';
   filtered.forEach((patient) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${patient.id}</td>
-      <td>${patient.name}</td>
-      <td>${patient.diagnosis}</td>
-      <td>${patient.transplantType}</td>
-      <td>D${patient.daysPost >= 0 ? '+' : ''}${patient.daysPost}</td>
-      <td>${createRiskBadge(patient.risk)}</td>
-      <td>${createStatusPill(patient.status)}</td>
-      <td class="actions-cell">
-        <button class="btn ghost small" type="button" data-action="details" data-patient-id="${patient.id}">Detalhes</button>
-        <button class="btn ghost danger small" type="button" data-action="remove" data-patient-id="${patient.id}">Remover</button>
-      </td>
-    `;
+
+    const idCell = document.createElement('td');
+    idCell.textContent = patient.id;
+    tr.appendChild(idCell);
+
+    const nameCell = document.createElement('td');
+    nameCell.textContent = patient.name;
+    tr.appendChild(nameCell);
+
+    const diagnosisCell = document.createElement('td');
+    diagnosisCell.textContent = patient.diagnosis;
+    tr.appendChild(diagnosisCell);
+
+    const transplantCell = document.createElement('td');
+    transplantCell.textContent = patient.transplantType;
+    tr.appendChild(transplantCell);
+
+    const daysCell = document.createElement('td');
+    daysCell.textContent = `D${patient.daysPost >= 0 ? '+' : ''}${patient.daysPost}`;
+    tr.appendChild(daysCell);
+
+    const riskCell = document.createElement('td');
+    riskCell.innerHTML = createRiskBadge(patient.risk);
+    tr.appendChild(riskCell);
+
+    const statusCell = document.createElement('td');
+    statusCell.innerHTML = createStatusPill(patient.status);
+    tr.appendChild(statusCell);
+
+    const actionsCell = document.createElement('td');
+    actionsCell.className = 'actions-cell';
+
+    const detailsButton = document.createElement('button');
+    detailsButton.className = 'btn ghost small';
+    detailsButton.type = 'button';
+    detailsButton.dataset.action = 'details';
+    detailsButton.dataset.patientId = patient.id;
+    detailsButton.textContent = 'Detalhes';
+
+    const removeButton = document.createElement('button');
+    removeButton.className = 'btn ghost danger small';
+    removeButton.type = 'button';
+    removeButton.dataset.action = 'remove';
+    removeButton.dataset.patientId = patient.id;
+    removeButton.textContent = 'Remover';
+
+    actionsCell.append(detailsButton, removeButton);
+    tr.appendChild(actionsCell);
+
     tbody.appendChild(tr);
   });
 
@@ -452,18 +488,32 @@ function setupPatientForm() {
     const container = document.getElementById('patientDetailsBody');
     if (!modal || !container) return;
 
-    container.innerHTML = `
-      <dl class="detail-list">
-        <div><dt>ID</dt><dd>${patient.id}</dd></div>
-        <div><dt>Paciente</dt><dd>${patient.name}</dd></div>
-        <div><dt>Diagnóstico</dt><dd>${patient.diagnosis}</dd></div>
-        <div><dt>Tipo de TCTH</dt><dd>${patient.transplantType}</dd></div>
-        <div><dt>Dias pós-transplante</dt><dd>D${patient.daysPost >= 0 ? '+' : ''}${patient.daysPost}</dd></div>
-        <div><dt>Estratificação</dt><dd>${patient.risk}</dd></div>
-        <div><dt>Status</dt><dd>${patient.status}</dd></div>
-        <div><dt>Observações</dt><dd>${patient.notes || 'Nenhuma observação registrada.'}</dd></div>
-      </dl>
-    `;
+    container.textContent = '';
+    const detailList = document.createElement('dl');
+    detailList.className = 'detail-list';
+
+    const entries = [
+      ['ID', patient.id],
+      ['Paciente', patient.name],
+      ['Diagnóstico', patient.diagnosis],
+      ['Tipo de TCTH', patient.transplantType],
+      ['Dias pós-transplante', `D${patient.daysPost >= 0 ? '+' : ''}${patient.daysPost}`],
+      ['Estratificação', patient.risk],
+      ['Status', patient.status],
+      ['Observações', patient.notes || 'Nenhuma observação registrada.']
+    ];
+
+    entries.forEach(([label, value]) => {
+      const wrapper = document.createElement('div');
+      const term = document.createElement('dt');
+      term.textContent = label;
+      const description = document.createElement('dd');
+      description.textContent = value;
+      wrapper.append(term, description);
+      detailList.appendChild(wrapper);
+    });
+
+    container.appendChild(detailList);
     modal.hidden = false;
     modal.addEventListener('click', (evt) => {
       if (evt.target === modal) closeModal(modal.id);
